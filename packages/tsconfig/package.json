@@ -1,6 +1,6 @@
 {
   "name": "@chrock-studio/tsconfig",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

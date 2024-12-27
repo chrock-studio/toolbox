@@ -1,0 +1,16 @@
+{
+  "name": "@chrock-studio/tsconfig",
+  "version": "0.1.1",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "package.json",
+    "tsconfig.json"
+  ],
+  "exports": {
+    ".": "./tsconfig.json"
+  }
+}

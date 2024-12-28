@@ -12,6 +12,11 @@
     "type": "git",
     "url": "https://github.com/chrock-studio/toolbox/tree/main/packages/overload"
   },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

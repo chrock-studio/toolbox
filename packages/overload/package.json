@@ -12,6 +12,10 @@
     "type": "git",
     "url": "https://github.com/chrock-studio/toolbox/tree/main/packages/overload"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",

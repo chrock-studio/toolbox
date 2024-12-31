@@ -1,5 +1,5 @@
 import type { Fn, MatchData, MatcherDefinition } from "../types";
-import * as v from "valibot";
+import type * as v from "valibot";
 
 export type ValibotSignature<TItems extends v.TupleItems> = (
   ...args: v.InferOutput<v.TupleSchema<TItems, undefined>>
@@ -25,11 +25,18 @@ export const valibot: {
     rest: TRest,
     fn: Fn,
   ): MatchData<Fn>;
-} = ((...args: [items: any[], fn: Fn] | [items: any[], rest: any, fn: Fn]) => {
-  const [items, rest, fn] = args.length === 3 ? args : [args[0], undefined, args[1]];
-  const schema: v.BaseSchema<any, any, any> = rest
-    ? v.tupleWithRest(items as [], rest)
-    : v.tuple(items as []);
+} = await Promise.resolve(import("valibot"))
+  .then(
+    (v) =>
+      ((...args: [items: any[], fn: Fn] | [items: any[], rest: any, fn: Fn]) => {
+        const [items, rest, fn] = args.length === 3 ? args : [args[0], undefined, args[1]];
+        const schema: v.BaseSchema<any, any, any> = rest
+          ? v.tupleWithRest(items as [], rest)
+          : v.tuple(items as []);
 
-  return [(args) => v.safeParse(schema, args).success, fn] as MatchData<Fn>;
-}) satisfies MatcherDefinition;
+        return [(args) => v.safeParse(schema, args).success, fn] as MatchData<Fn>;
+      }) satisfies MatcherDefinition,
+  )
+  .catch(() => () => {
+    throw new Error("Method not implemented.");
+  });

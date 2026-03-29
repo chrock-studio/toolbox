@@ -1,21 +1,21 @@
 {
-  "name": "@chrock-studio/code-block",
-  "description": "A simple code-block wrapper to compose start blocks, body blocks, and end blocks!",
-  "version": "0.2.0",
+  "name": "@chrock-studio/signals",
+  "description": "A simple utils for `alien-signals`.",
+  "version": "0.0.0",
   "license": "MIT",
   "author": {
     "name": "JuerGenie",
     "email": "juergenie@outlook.com",
     "url": "https://github.com/JuerGenie"
   },
-  "homepage": "https://github.com/chrock-studio/toolbox/tree/main/packages/code-block",
+  "homepage": "https://github.com/chrock-studio/toolbox/tree/main/packages/signals",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chrock-studio/toolbox/tree/main/packages/code-block"
+    "url": "https://github.com/chrock-studio/toolbox/tree/main/packages/signals"
   },
   "keywords": [
-    "code-block",
-    "sugar"
+    "alien-signals",
+    "signals"
   ],
   "files": [
     "dist",
@@ -34,11 +34,17 @@
   "exports": {
     ".": "./dist/index.mjs"
   },
+  "peerDependencies": {
+    "alien-signals": "^3.1.2"
+  },
   "devDependencies": {
     "@chrock-studio/tsconfig": "workspace:*",
+    "@chrock-studio/shared": "workspace:*",
+    "@chrock-studio/code-block": "workspace:*",
     "tsup": "^8.5.1",
     "tsx": "^4.19.2",
     "typescript": "^5.9.3",
+    "vite": "^7.0.0",
     "vitest": "^4.1.0"
   }
 }

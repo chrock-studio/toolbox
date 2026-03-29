@@ -81,7 +81,7 @@ const content = readBlock((fd) => fs.readFileSync(fd, "utf-8"), "example.txt");
 ### 数据库事务
 
 ```typescript
-import {  createBlock } from '@chrock-studio/code-block';
+import { createBlock } from '@chrock-studio/code-block';
 
 const transactionBlock =  createBlock(
   // 开始事务

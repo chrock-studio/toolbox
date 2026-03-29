@@ -81,7 +81,7 @@ const content = readBlock((fd) => fs.readFileSync(fd, "utf-8"), "example.txt");
 ### Database Transactions
 
 ```typescript
-import {  createBlock } from '@chrock-studio/code-block';
+import { createBlock } from '@chrock-studio/code-block';
 
 const transactionBlock =  createBlock(
   // Start transaction

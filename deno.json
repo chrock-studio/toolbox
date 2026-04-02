@@ -1,0 +1,25 @@
+{
+  "fmt": {
+    "lineWidth": 120,
+    "quoteProps": "consistent",
+    "trailingCommas": "onlyMultiLine"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
+  },
+  "compilerOptions": {
+    "verbatimModuleSyntax": true
+  },
+  "workspace": [
+    "./packages/code-block",
+    "./packages/overload",
+    "./packages/shared",
+    "./packages/signal-proxy",
+    "./packages/signals"
+  ],
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.19"
+  }
+}

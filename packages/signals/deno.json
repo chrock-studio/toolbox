@@ -1,0 +1,19 @@
+{
+  "name": "@chrock-studio/signals",
+  "version": "0.1.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./mod.ts",
+    "./blocks": "./blocks/mod.ts",
+    "./blocks/batch": "./blocks/batch.ts",
+    "./blocks/untrack": "./blocks/untrack.ts",
+
+    "./decorators": "./decorators/mod.ts",
+    "./decorators/types": "./decorators/types.ts",
+
+    "./types": "./types.ts"
+  },
+  "imports": {
+    "alien-signals": "npm:alien-signals@^3.1.2"
+  }
+}

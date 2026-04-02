@@ -1,9 +1,0 @@
-{
-  "extends": "@chrock-studio/tsconfig",
-  "compilerOptions": {
-    "composite": false,
-    "lib": ["DOM", "ESNext"]
-  },
-  "include": ["lib", "test", "tsup.config.ts"],
-  "exclude": ["node_modules"]
-}

@@ -3,7 +3,6 @@
   "version": "0.1.2",
   "license": "MIT",
   "imports": {
-    "type-fest": "npm:type-fest@^5.5.0",
     "zod": "npm:zod@^4.3.6"
   },
   "exports": {

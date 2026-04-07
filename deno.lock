@@ -37,18 +37,23 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@std/assert@^1.0.19"
+      "jsr:@std/assert@^1.0.19",
+      "npm:type-fest@^5.5.0"
     ],
     "members": {
       "packages/overload": {
         "dependencies": [
-          "npm:type-fest@^5.5.0",
           "npm:zod@^4.3.6"
         ]
       },
       "packages/signals": {
         "dependencies": [
           "npm:alien-signals@^3.1.2"
+        ]
+      },
+      "packages/zod-utils": {
+        "dependencies": [
+          "npm:zod@^4.3.6"
         ]
       }
     }

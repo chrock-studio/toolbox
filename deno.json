@@ -17,9 +17,11 @@
     "./packages/overload",
     "./packages/shared",
     "./packages/signal-proxy",
-    "./packages/signals"
+    "./packages/signals",
+    "./packages/zod-utils"
   ],
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.19"
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "type-fest": "npm:type-fest@^5.5.0"
   }
 }

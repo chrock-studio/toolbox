@@ -92,12 +92,13 @@ export const withPrototype = ((
    */
   <
     O extends object,
+    I extends unknown,
     M extends object,
     T extends zod.util.Extend<O, M>,
   >(
-    schema: zod.ZodType<O>,
+    schema: zod.ZodType<O, I>,
     methods: M & ThisType<T>,
-  ): zod.ZodType<zod.util.Extend<O, M>>;
+  ): zod.ZodType<T, I>;
 
   /**
    * Enhances a Zod schema by adding prototype methods to its output objects.
@@ -128,9 +129,10 @@ export const withPrototype = ((
    */
   <
     O extends object,
+    I extends unknown,
     M extends object,
     T extends zod.util.Extend<O, M>,
   >(
     methods: M & ThisType<T>,
-  ): (schema: zod.ZodType<O>) => zod.ZodType<zod.util.Extend<O, M>>;
+  ): (schema: zod.ZodType<O, I>) => zod.ZodType<T, I>;
 };

@@ -16,7 +16,7 @@ Deno.test("withPrototype", async (t) => {
       },
     );
 
-    const user = User.parse({
+    const user = User.decode({
       name: "John Doe",
       age: 18,
     });
@@ -38,7 +38,7 @@ Deno.test("withPrototype", async (t) => {
         }),
       );
 
-    const user = User.parse({
+    const user = User.decode({
       name: "Jane Smith",
       age: 25,
     });
@@ -68,7 +68,7 @@ Deno.test("withPrototype", async (t) => {
       },
     }));
 
-    const user = User.parse({
+    const user = User.decode({
       name: "John Doe",
       address: {
         street: "123 Main St",

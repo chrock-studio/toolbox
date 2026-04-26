@@ -52,7 +52,7 @@ import type { Checker } from "../checker.ts";
  * into a corresponding Checker function. The returned array of Checker functions
  * can be used with Matcher.make() to create pattern matchers.
  *
- * @typeParam S - The Zod schema array type, inferred from the input arguments.
+ * @template S - The Zod schema array type, inferred from the input arguments.
  * @param schema - The Zod schemas to convert.
  * @returns An array of Checker functions, each corresponding to an input schema.
  *
@@ -97,7 +97,7 @@ export const zod = <const S extends z.ZodType[]>(...schema: S) =>
  * This is the underlying implementation of the zod function, and can also be used
  * standalone to create individual Checkers.
  *
- * @typeParam S - The Zod schema type.
+ * @template S - The Zod schema type.
  * @param schema - The Zod schema to convert.
  * @returns A Checker function that validates if input conforms to the schema.
  *

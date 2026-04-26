@@ -31,7 +31,7 @@ export type Checker<T = any> = (input: unknown) => input is T;
  * Given a `Checker<T>`, this utility type extracts the type `T` that the checker
  * narrows to. This is useful for deriving parameter types from checker definitions.
  *
- * @typeParam C - A {@link Checker} type from which to extract the parameter type.
+ * @template C - A {@link Checker} type from which to extract the parameter type.
  *
  * @example
  * ```ts
@@ -52,7 +52,7 @@ export type CheckerToParam<C extends Checker> = C extends Checker<infer D> ? D :
  * produces a tuple of the extracted parameter types `[A, B, ...]`. This is used
  * internally to derive parameter lists from matcher checker arrays.
  *
- * @typeParam C - An array of {@link Checker} types to map to parameter types.
+ * @template C - An array of {@link Checker} types to map to parameter types.
  *
  * @example
  * ```ts

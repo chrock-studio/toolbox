@@ -10,7 +10,7 @@
  * properties visible in type hints. This is particularly useful when type
  * inference produces overly generic or wrapped types.
  *
- * @typeParam T - The type to expand.
+ * @template T - The type to expand.
  * @returns If `T` is an object, returns the expanded object type; otherwise returns the original type.
  *
  * @example
@@ -33,7 +33,7 @@ export type Flatten<T> = T extends object ? { [key in keyof T]: T[key] } : T;
  * Used for handling values that may be synchronous or asynchronous,
  * commonly seen in function return values or callbacks.
  *
- * @typeParam T - The type of the value.
+ * @template T - The type of the value.
  *
  * @example
  * ```ts
@@ -63,7 +63,7 @@ export type EmptyData = Record<PropertyKey, unknown>;
  * A function with no parameters that returns a value of type `T`.
  * Commonly used for implementing lazy evaluation or reading values in reactive systems.
  *
- * @typeParam T - The type of the return value.
+ * @template T - The type of the return value.
  *
  * @example
  * ```ts
@@ -80,7 +80,7 @@ export type Getter<T> = () => T;
  * providing greater flexibility. Commonly used in API design to allow
  * users to optionally use lazy evaluation.
  *
- * @typeParam T - The type of the value.
+ * @template T - The type of the value.
  *
  * @example
  * ```ts
@@ -100,7 +100,7 @@ export type MaybeGetter<T> = T | Getter<T>;
  * A function that accepts a parameter of type `T` and returns void.
  * Commonly used for updating values in reactive systems.
  *
- * @typeParam T - The type of the value to set.
+ * @template T - The type of the value to set.
  *
  * @example
  * ```ts
@@ -118,8 +118,8 @@ export type Setter<T> = (value: T) => void;
  * A function that accepts a parameter of type `T` and returns a value of type `R`.
  * Commonly used for data transformation or computing derived values in reactive systems.
  *
- * @typeParam T - The type of the input value.
- * @typeParam R - The type of the output value.
+ * @template T - The type of the input value.
+ * @template R - The type of the output value.
  *
  * @example
  * ```ts
@@ -136,8 +136,8 @@ export type Mapper<T, R> = (value: T) => R;
  * providing greater flexibility. Commonly used in API design to
  * allow users to optionally provide transformation logic or direct results.
  *
- * @typeParam T - The type of the input value (for mapper function).
- * @typeParam R - The type of the output value.
+ * @template T - The type of the input value (for mapper function).
+ * @template R - The type of the output value.
  *
  * @example
  * ```ts

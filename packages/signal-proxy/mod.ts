@@ -163,7 +163,7 @@ type SignalProxyGetters<
  * - **Setter**: A method with one or more parameters becomes settable as `prop$`
  *   (e.g., `name(value)` → `proxy.name$ = value`)
  *
- * @typeParam T - The type of the object to be wrapped by the signal proxy.
+ * @template T - The type of the object to be wrapped by the signal proxy.
  *
  * @example
  * ```ts
@@ -202,7 +202,7 @@ export type SignalProxy<T extends object> = Flatten<
  * immediately returns the proxy, discarding the revoke function. Use this
  * when you don't need to manually revoke the proxy.
  *
- * @typeParam T - The type of the object to proxy.
+ * @template T - The type of the object to proxy.
  * @param obj - The object to create a signal proxy for.
  * @returns A signal proxy that wraps the original object.
  *
@@ -255,7 +255,7 @@ export const createSignalProxy = <T extends object>(obj: T): SignalProxy<T> => r
  * The returned proxy object implements the `Symbol.dispose` and `Symbol.asyncDispose`
  * protocols, allowing it to be used in `using` statements for automatic cleanup.
  *
- * @typeParam T - The type of the object to proxy.
+ * @template T - The type of the object to proxy.
  * @param obj - The object to create a revocable signal proxy for.
  * @returns An object containing:
  *   - `proxy`: The signal proxy that wraps the original object.

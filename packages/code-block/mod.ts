@@ -142,7 +142,7 @@ import type { MaybePromise } from "@chrock-studio/shared";
  * ensuring resources are properly cleaned up after the code block executes,
  * regardless of success or failure.
  *
- * @typeParam Start - The type of the start function, must be a function that returns a resource cache
+ * @template Start - The type of the start function, must be a function that returns a resource cache
  * @param start - The start function, called before the code block executes, used to acquire resources and return a cache object
  * @param end - The end function, called after the code block executes, used to clean up resources
  *   - `cache` - The cache object returned by the start function
@@ -211,31 +211,29 @@ import type { MaybePromise } from "@chrock-studio/shared";
  *   return count;
  * });
  */
-export const createBlock =
-  // deno-lint-ignore no-explicit-any
-  <const Start extends (...args: any[]) => any>(
-    start: Start,
-    end: (
-      cache: ReturnType<Start>,
-      result?: unknown,
-      error?: unknown,
-    ) => void,
-  ) =>
-  <Result>(
-    body: (cache: ReturnType<Start>) => Result,
-    ...args: Parameters<Start>
-  ): Result => {
-    const cache = start(...args) as ReturnType<Start>;
-    let result, error;
+export const createBlock = <const Start extends (...args: any[]) => any>(
+  start: Start,
+  end: (
+    cache: ReturnType<Start>,
+    result?: unknown,
+    error?: unknown,
+  ) => void,
+) =>
+<Result>(
+  body: (cache: ReturnType<Start>) => Result,
+  ...args: Parameters<Start>
+): Result => {
+  const cache = start(...args) as ReturnType<Start>;
+  let result, error;
 
-    try {
-      return (result = body(cache));
-    } catch (err) {
-      throw (error = err);
-    } finally {
-      end(cache, result as never, error);
-    }
-  };
+  try {
+    return (result = body(cache));
+  } catch (err) {
+    throw (error = err);
+  } finally {
+    end(cache, result as never, error);
+  }
+};
 
 /**
  * Creates an asynchronous code block for managing async resource acquisition and release.
@@ -244,7 +242,7 @@ export const createBlock =
  * Ensures async resources are properly cleaned up after the code block executes,
  * regardless of success or failure.
  *
- * @typeParam Start - The type of the start function, can return a Promise or a regular value
+ * @template Start - The type of the start function, can return a Promise or a regular value
  * @param start - The start function, called before the code block executes, used to acquire resources and return a cache object
  * @param end - The end function, called after the code block executes, used to clean up resources
  *   - `cache` - The cache object returned by the start function
@@ -310,7 +308,6 @@ export const createBlock =
  * );
  */
 export const createAsyncBlock = <
-  // deno-lint-ignore no-explicit-any
   const Start extends (...args: any[]) => MaybePromise<any>,
   Cache extends Awaited<ReturnType<Start>>,
 >(

@@ -11,8 +11,8 @@
  * It wraps the getter's return value with signal reactivity, allowing automatic
  * dependency tracking and updates when dependencies change.
  *
- * @typeParam This - The class type that contains the decorated getter
- * @typeParam Value - The return type of the getter
+ * @template This - The class type that contains the decorated getter
+ * @template Value - The return type of the getter
  *
  * @param target - The original getter function that returns a value
  * @param context - Metadata about the getter being decorated
@@ -32,8 +32,8 @@ export type ClassGetterDecorator = <
  * A setter decorator modifies the behavior of a class setter method,
  * enabling reactive updates when values are assigned.
  *
- * @typeParam This - The class type that contains the decorated setter
- * @typeParam Value - The type of value being set
+ * @template This - The class type that contains the decorated setter
+ * @template Value - The type of value being set
  *
  * @param target - The original setter function that accepts a value
  * @param context - Metadata about the setter being decorated
@@ -54,8 +54,8 @@ export type ClassSetterDecorator = <
  * It provides full control over property access and assignment, enabling
  * bidirectional reactive bindings.
  *
- * @typeParam This - The class type that contains the decorated accessor
- * @typeParam Value - The type of the accessor's value
+ * @template This - The class type that contains the decorated accessor
+ * @template Value - The type of the accessor's value
  *
  * @param target - The original accessor object containing get/set methods
  * @param context - Metadata about the accessor being decorated
@@ -75,8 +75,8 @@ export type ClassAccessorDecorator = <
  * A method decorator modifies class methods, potentially wrapping them
  * with additional behavior like logging, validation, or signal tracking.
  *
- * @typeParam This - The class type that contains the decorated method
- * @typeParam Value - The function type of the method
+ * @template This - The class type that contains the decorated method
+ * @template Value - The function type of the method
  *
  * @param target - The original method function
  * @param context - Metadata about the method being decorated
@@ -96,7 +96,7 @@ export type ClassMethodDecorator = <
  * A class decorator operates on the entire class constructor,
  * enabling modifications to the class prototype or static members.
  *
- * @typeParam Class - The class constructor type being decorated
+ * @template Class - The class constructor type being decorated
  *
  * @param target - The class constructor function
  * @param context - Metadata about the class being decorated

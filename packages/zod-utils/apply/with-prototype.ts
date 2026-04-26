@@ -38,8 +38,7 @@ import type * as hkt from "hkt-core";
  * );
  * ```
  */
-export interface Overwrite extends hkt.TypeLambda<[input: unknown, output: object, methods: object], zod.ZodType> {
-}
+export type Overwrite = hkt.TypeLambda<[input: unknown, output: object, methods: object], zod.ZodType>;
 
 export declare namespace Overwrite {
   /**
@@ -115,8 +114,7 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
   >(
     schema: zod.ZodType<O, I>,
     methods: M & ThisType<T>,
-  ): /** @ts-expect-error -- It's OK! */
-  hkt.Apply<P, [I, T, M]>;
+  ): hkt.ApplyW<P, [I, T, M]>;
 
   /**
    * Enhances a Zod schema by adding prototype methods to its output objects.
@@ -152,8 +150,7 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
     T extends zod.util.Extend<O, M>,
   >(
     methods: M & ThisType<T>,
-  ): /** @ts-expect-error -- It's OK! */
-  (schema: zod.ZodType<O, I>) => hkt.Apply<P, [I, T, M]>;
+  ): (schema: zod.ZodType<O, I>) => hkt.ApplyW<P, [I, T, M]>;
 
   assert<T extends Overwrite>(): WithPrototype<T>;
 }

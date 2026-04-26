@@ -46,7 +46,7 @@ Deno.test("withPrototype", async (t) => {
     assertEquals(user.info(), '"Jane Smith" (25)');
   });
 
-  await t.step("should work with nested objects", () => {
+  await t.step("should work with getter and nested objects", () => {
     const Address = withPrototype(
       z.object({
         street: z.string(),
@@ -63,7 +63,7 @@ Deno.test("withPrototype", async (t) => {
       name: z.string(),
       address: Address,
     }).apply(withPrototype({
-      info() {
+      get info() {
         return `"${this.name}" at ${this.address.fullAddress()}`;
       },
     }));
@@ -77,7 +77,7 @@ Deno.test("withPrototype", async (t) => {
     });
 
     assertEquals(user.address.fullAddress(), "123 Main St, New York");
-    assertEquals(user.info(), '"John Doe" at 123 Main St, New York');
+    assertEquals(user.info, '"John Doe" at 123 Main St, New York');
   });
 
   await t.step("should work with prototype chain", () => {

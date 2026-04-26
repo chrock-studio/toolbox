@@ -112,8 +112,6 @@
  *
  * @module signal-proxy
  */
-
-// deno-lint-ignore-file no-explicit-any
 import type { Flatten } from "@chrock-studio/shared/types";
 
 type MatchFunction<O, K extends keyof O = keyof O> = keyof {
@@ -151,7 +149,47 @@ type SignalProxyGetters<
 };
 
 /**
- * SignalProxy.
+ * A proxy type that wraps an object and exposes its getter/setter methods
+ * through a reactive signal-like API using the `$` suffix convention.
+ *
+ * This type combines the original object properties with:
+ * - **SignalProxySetters**: Writable properties with `$` suffix for methods with parameters
+ * - **SignalProxyGetters**: Readonly properties with `$` suffix for methods with no parameters
+ * - **Disposable & AsyncDisposable**: Support for explicit resource management via `using` statements
+ *
+ * ## Convention
+ * - **Getter**: A method with zero parameters becomes accessible as `prop$`
+ *   (e.g., `name()` → `name$`)
+ * - **Setter**: A method with one or more parameters becomes settable as `prop$`
+ *   (e.g., `name(value)` → `proxy.name$ = value`)
+ *
+ * @typeParam T - The type of the object to be wrapped by the signal proxy.
+ *
+ * @example
+ * ```ts
+ * import { delegate } from "@chrock-studio/shared";
+ * import { createSignalProxy } from "@chrock-studio/signal-proxy";
+ *
+ * const obj = {
+ *   __name: 'John',
+ *   name: delegate(
+ *     () => obj.__name,
+ *     (val) => void (obj.__name = val),
+ *   ),
+ * };
+ *
+ * const proxy = createSignalProxy(obj);
+ *
+ * // Access getter
+ * console.log(proxy.name$); // "John"
+ *
+ * // Set value
+ * proxy.name$ = 'Jane';
+ * console.log(proxy.name$); // "Jane"
+ * ```
+ *
+ * @see {@link createSignalProxy} For creating a non-revocable signal proxy
+ * @see {@link revocableSignalProxy} For creating a revocable signal proxy
  */
 export type SignalProxy<T extends object> = Flatten<
   T & SignalProxySetters<T> & SignalProxyGetters<T> & Disposable & AsyncDisposable

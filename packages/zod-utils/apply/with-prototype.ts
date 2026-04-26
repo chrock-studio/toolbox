@@ -40,6 +40,13 @@ import type * as hkt from "hkt-core";
  */
 export type Overwrite = hkt.TypeLambda<[input: unknown, output: object, methods: object], zod.ZodType>;
 
+/**
+ * Utility types and the default implementation for the {@link Overwrite} HKT.
+ *
+ * Provides type-level helpers to extract the `input`, `output`, and `methods`
+ * type arguments, as well as the {@link Default} implementation that returns
+ * a plain `zod.ZodType`.
+ */
 export declare namespace Overwrite {
   /**
    * Extracts the input type parameter (`Arg0`) from an {@link Overwrite} HKT.
@@ -70,10 +77,27 @@ export declare namespace Overwrite {
    * `z.ZodObject`), extend {@link Overwrite} directly instead.
    */
   export interface Default extends Overwrite {
+    /**
+     * The return type of this HKT.
+     *
+     * Defaults to `zod.ZodType<Output, Input>`, representing a generic Zod type
+     * with the enhanced output and original input.
+     */
     return: zod.ZodType<Output<this>, Input<this>>;
   }
 }
 
+/**
+ * The interface for the {@link withPrototype} utility.
+ *
+ * `WithPrototype` provides callable signatures that support both direct
+ * (two-argument) and curried (single-argument) usage patterns. It also
+ * exposes an {@link assert} method for customizing the return type via a
+ * user-defined {@link Overwrite} HKT.
+ *
+ * @template P - The {@link Overwrite} HKT that controls the return type.
+ *                Defaults to {@link Overwrite.Default}.
+ */
 export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
   /**
    * This function enhances Zod object schemas by adding prototype methods to their output.
@@ -152,6 +176,32 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
     methods: M & ThisType<T>,
   ): (schema: zod.ZodType<O, I>) => hkt.ApplyW<P, [I, T, M]>;
 
+  /**
+   * Narrows the return type of `withPrototype` by asserting a custom
+   * {@link Overwrite} HKT.
+   *
+   * This is useful when you need to preserve a more specific Zod type
+   * (such as `z.ZodObject`) instead of the generic `z.ZodType` returned by
+   * {@link Overwrite.Default}.
+   *
+   * @template T - The custom {@link Overwrite} implementation to use.
+   * @returns A `WithPrototype` instance bound to the asserted HKT.
+   *
+   * @example
+   * ```typescript
+   * interface UserOverwrite extends Overwrite {
+   *   return: z.ZodObject<typeof shape, z.core.$strip & { out: Overwrite.Methods<this> }>;
+   * }
+   *
+   * const User = z.object(shape).apply(
+   *   withPrototype.assert<UserOverwrite>()({
+   *     info() {
+   *       return `"${this.name}" (Age: ${this.age})`;
+   *     },
+   *   }),
+   * );
+   * ```
+   */
   assert<T extends Overwrite>(): WithPrototype<T>;
 }
 

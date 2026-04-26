@@ -1,5 +1,4 @@
 {
   "deno.enable": true,
-  "editor.defaultFormatter": "denoland.vscode-deno",
-  "roo-cline.useAgentRules": true
+  "editor.defaultFormatter": "denoland.vscode-deno"
 }

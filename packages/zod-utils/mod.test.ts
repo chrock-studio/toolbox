@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { z } from "zod";
-import { withPrototype } from "./apply/mod.ts";
+import { type Overwrite, withPrototype } from "./apply/mod.ts";
 
 Deno.test("withPrototype", async (t) => {
   await t.step("should add prototype methods to Zod object schema output", () => {
@@ -78,5 +78,47 @@ Deno.test("withPrototype", async (t) => {
 
     assertEquals(user.address.fullAddress(), "123 Main St, New York");
     assertEquals(user.info(), '"John Doe" at 123 Main St, New York');
+  });
+
+  await t.step("should work with prototype chain", () => {
+    const shape = {
+      name: z.string(),
+      age: z.number(),
+    };
+
+    interface UserOverwrite extends Overwrite {
+      return: z.ZodObject<
+        typeof shape,
+        Overwrite.Methods<this> extends infer O ? z.core.$strip & { out: O } : never
+      >;
+    }
+    const User = z
+      .object(shape)
+      .apply(
+        withPrototype.assert<UserOverwrite>()({
+          info() {
+            return `"${this.name}" (Age: ${this.age})`;
+          },
+        }),
+      )
+      .extend({
+        length: z.number(),
+      })
+      .apply(
+        withPrototype({
+          fullInformation() {
+            return `${this.info()} (Length: ${this.length})`;
+          },
+        }),
+      );
+
+    const user = User.decode({
+      name: "John Doe",
+      age: 18,
+      length: 160,
+    });
+
+    assertEquals(user.info(), '"John Doe" (Age: 18)');
+    assertEquals(user.fullInformation(), '"John Doe" (Age: 18) (Length: 160)');
   });
 });

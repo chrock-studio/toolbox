@@ -130,4 +130,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-.blackbox
+.DS_Store
+Thumbs.db

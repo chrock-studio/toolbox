@@ -5,6 +5,7 @@
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:alien-signals@^3.1.2": "3.1.2",
     "npm:hkt-core@^1.3.5": "1.3.5",
+    "npm:nanoid@^5.1.11": "5.1.11",
     "npm:type-fest@^5.5.0": "5.5.0",
     "npm:zod@^4.3.6": "4.3.6"
   },
@@ -25,6 +26,10 @@
     },
     "hkt-core@1.3.5": {
       "integrity": "sha512-0cr/0z2OfF+PfHIjr2KnfSdq4vF2s+R5Q7GheoRFTqkaLYm5fK3TAOcy3C38PMaBP1wbKkDLWGHa+S2mvNj1jA=="
+    },
+    "nanoid@5.1.11": {
+      "integrity": "sha512-v+KEsUv2ps74PaSKv0gHTxTCgMXOIfBEbaqa6w6ISIGC7ZsvHN4N9oJ8d4cmf0n5oTzQz2SLmThbQWhjd/8eKg==",
+      "bin": true
     },
     "tagged-tag@1.0.0": {
       "integrity": "sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng=="
@@ -53,6 +58,12 @@
       "packages/signals": {
         "dependencies": [
           "npm:alien-signals@^3.1.2"
+        ]
+      },
+      "packages/sql-kv": {
+        "dependencies": [
+          "npm:nanoid@^5.1.11",
+          "npm:zod@^4.3.6"
         ]
       },
       "packages/zod-utils": {

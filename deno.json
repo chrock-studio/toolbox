@@ -18,6 +18,7 @@
     "./packages/shared",
     "./packages/signal-proxy",
     "./packages/signals",
+    "./packages/sql-kv",
     "./packages/zod-utils"
   ],
   "imports": {

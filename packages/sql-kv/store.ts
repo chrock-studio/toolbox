@@ -67,6 +67,14 @@ export class Store {
     return collection;
   }
 
+  /**
+   * Create SQL indexes for the configured fields of a collection.
+   *
+   * Each field gets an index named `idx_{table}_{collection}_{field}` on
+   * the JSON value path `__value->>'$.{field}'`.
+   *
+   * @param config - The collection configuration containing index definitions
+   */
   private async createIndexes<T extends Record<string, unknown>>(config: CollectionConfig<T>): Promise<void> {
     for (const field of config.indexes ?? []) {
       const indexName = `idx_${this.tableName}_${config.name}_${field.replace(/\./g, "_")}`;

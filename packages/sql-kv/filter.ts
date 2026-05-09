@@ -13,6 +13,11 @@ import type { Filter, SQLInputValue } from "./types.ts";
 // Internal filter implementations
 // ---------------------------------------------------------------------------
 
+/**
+ * A filter that compares a value against a given value using a comparison operator.
+ *
+ * Supports operators like `==`, `!=`, `<`, `<=`, `>`, `>=`, and `REGEXP`.
+ */
 class ComparisonFilter implements Filter {
   constructor(
     private readonly operator: string,
@@ -24,6 +29,9 @@ class ComparisonFilter implements Filter {
   }
 }
 
+/**
+ * A filter that checks if a value is in the given list (SQL `IN`).
+ */
 class InFilter implements Filter {
   constructor(private readonly values: SQLInputValue[]) {}
 
@@ -33,6 +41,9 @@ class InFilter implements Filter {
   }
 }
 
+/**
+ * A filter that checks if a value is NOT in the given list (SQL `NOT IN`).
+ */
 class NotInFilter implements Filter {
   constructor(private readonly values: SQLInputValue[]) {}
 
@@ -42,6 +53,9 @@ class NotInFilter implements Filter {
   }
 }
 
+/**
+ * A filter that checks if a value is between two values (inclusive, SQL `BETWEEN`).
+ */
 class BetweenFilter implements Filter {
   constructor(
     private readonly a: SQLInputValue,
@@ -53,6 +67,9 @@ class BetweenFilter implements Filter {
   }
 }
 
+/**
+ * A filter that matches a value against a SQL `LIKE` pattern.
+ */
 class LikeFilter implements Filter {
   constructor(private readonly pattern: string) {}
 
@@ -61,6 +78,9 @@ class LikeFilter implements Filter {
   }
 }
 
+/**
+ * A filter that combines multiple filters with a logical operator (`AND` or `OR`).
+ */
 class LogicalFilter implements Filter {
   constructor(
     private readonly operator: "AND" | "OR",
@@ -79,12 +99,18 @@ class LogicalFilter implements Filter {
   }
 }
 
+/**
+ * A filter that checks if a value is SQL `NULL`.
+ */
 class IsNullFilter implements Filter {
   toSQL(path: string): { where: string; params: SQLInputValue[] } {
     return { where: `${path} IS NULL`, params: [] };
   }
 }
 
+/**
+ * A filter that checks if a value is NOT SQL `NULL`.
+ */
 class IsNotNullFilter implements Filter {
   toSQL(path: string): { where: string; params: SQLInputValue[] } {
     return { where: `${path} IS NOT NULL`, params: [] };

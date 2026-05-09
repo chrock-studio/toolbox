@@ -172,6 +172,12 @@ export class Collection<T extends Record<string, unknown>> {
   // CRUD operations
   // -----------------------------------------------------------------------
 
+  /**
+   * Build an INSERT OR REPLACE SQL statement for the given items.
+   *
+   * @param items - An array of [key, value] pairs to insert
+   * @returns The compiled SQL statement and parameters
+   */
   private buildInsert(items: [key: string, value: unknown][]): { sql: string; params: SQLInputValue[] } {
     return {
       sql: `INSERT OR REPLACE INTO ${this.tableName} (__key, __value) VALUES ${
@@ -210,6 +216,24 @@ export class Collection<T extends Record<string, unknown>> {
 
     return [parsed];
   }
+
+  /**
+   * Set (insert or replace) multiple items in the collection.
+   *
+   * All values are validated against the collection's Zod schema before storage.
+   * The operation is performed within a single transaction.
+   *
+   * @param items - An array of [key, value] tuples to set
+   * @returns An array of the stored (validated) items
+   *
+   * @example
+   * ```ts
+   * const [alice, bob] = await users.setMany([
+   *   ["user1", { id: "user1", name: "Alice" }],
+   *   ["user2", { id: "user2", name: "Bob" }],
+   * ]);
+   * ```
+   */
   async setMany(items: [key: string, value: T][]): Promise<T[]> {
     const entries = await Promise.all(
       items.map(async ([key, value]) => [key, await this.config.schema.encodeAsync(value) as T] as const),

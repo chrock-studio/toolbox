@@ -37,21 +37,37 @@ export class KV {
   // Filter operators – accessible as `kv.eq(...)`, `kv.lt(...)`, etc.
   // -----------------------------------------------------------------------
 
+  /** Create an equality filter. */
   readonly eq = filters.eq;
+  /** Create an inequality filter. */
   readonly neq = filters.neq;
+  /** Create a less-than filter. */
   readonly lt = filters.lt;
+  /** Create a greater-than filter. */
   readonly gt = filters.gt;
+  /** Create a less-than-or-equal filter. */
   readonly lte = filters.lte;
+  /** Create a greater-than-or-equal filter. */
   readonly gte = filters.gte;
+  /** Create a regexp match filter. */
   readonly regexp = filters.regexp;
+  /** Create a LIKE pattern filter. */
   readonly like = filters.like;
+  /** Create an IN-list filter. */
   readonly isIn = filters.isIn;
+  /** Create an IN-list filter (alias for `isIn`). */
   readonly in = filters.isIn;
+  /** Create a NOT-IN-list filter. */
   readonly notIn = filters.notIn;
+  /** Create a BETWEEN filter. */
   readonly between = filters.between;
+  /** Combine filters with logical OR. */
   readonly or = filters.or;
+  /** Combine filters with logical AND. */
   readonly and = filters.and;
+  /** Create an IS NULL filter. */
   readonly isNull = filters.isNull;
+  /** Create an IS NOT NULL filter. */
   readonly isNotNull = filters.isNotNull;
 
   /**

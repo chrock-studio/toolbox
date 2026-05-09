@@ -9,13 +9,21 @@
 import type { ZodType } from "zod";
 
 /**
- * Result of a single SQL execution.
+ * Result metadata from a single SQL execution.
+ *
+ * Contains optional `rows` (affected row count) and `lastId` (last inserted row ID).
  */
 export interface SQLRunResult {
+  /** The number of rows affected by the statement. */
   rows?: number;
+  /** The last inserted row ID, if applicable. */
   lastId?: unknown;
   [key: number]: unknown;
 }
+
+/**
+ * Primitive value types that can be bound to SQL parameters.
+ */
 export type SQLInputValue = null | number | bigint | string | DataView;
 
 /**
@@ -114,6 +122,9 @@ export interface RawSQL {
 
 /**
  * Sort direction for ORDER BY clauses.
+ *
+ * - `"asc"` — ascending order (default)
+ * - `"desc"` — descending order
  */
 export type SortDirection = "asc" | "desc";
 

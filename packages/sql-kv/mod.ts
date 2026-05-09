@@ -30,4 +30,13 @@ export { Store } from "./store.ts";
 export { Collection } from "./collection.ts";
 export { isRaw, raw, sql } from "./sql.ts";
 export * from "./filter.ts";
-export type { CollectionConfig, Filter, RawSQL, SQLAdapter, SQLRunResult } from "./types.ts";
+export type {
+  CollectionConfig,
+  Filter,
+  QueryOptions,
+  RawSQL,
+  SortDirection,
+  SortSpec,
+  SQLAdapter,
+  SQLRunResult,
+} from "./types.ts";

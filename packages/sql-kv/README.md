@@ -1,5 +1,7 @@
 # `@chrock-studio/sql-kv` - 基于 SQL JSON Functions 的 KV Storage
 
+一个注重可玩性和趣味性的小玩具，基于JSON函数进行数据读取——这一方式势必会影响性能，不及原生 KV 数据库以及基于表结构模式的 SQL 数据库。
+
 ## 基本原理即设计方案
 
 ### 基于 `JSON Functions`
@@ -135,3 +137,25 @@ const users = kv.collection({/* ... */});
 // CREATE INDEX idx_users_name ON kv (__value->'$.name');
 // CREATE INDEX idx_users_mail ON kv (__value->'$.mail');
 ```
+
+## 路线图
+
+- [x] `kv.store`
+  - [x] 自动创建表
+  - [x] 自动创建集合索引
+- [x] `kv.collection`
+  - [x] 自动创建字段索引
+  - [x] `collection.get` / `collection.getMany` 查询
+  - [x] `collection.set` 写入
+  - [x] `collection.list` 遍历集合
+  - [x] `collection.find` 条件查询 + 操作符 (`kv.eq`, `kv.lt`, `kv.gt`, `kv.or`, `kv.in`, `kv.regexp` 等)
+  - [x] `collection.deleteMany` 批量删除
+  - [ ] 关联查询 / `z.lazy()` 解析
+- [x] 复杂查询
+  - [x] 事务支持
+  - [x] 分页 / `limit` + `offset`
+  - [x] 排序 / `order by`
+  - [x] 与 `zod` 深度集成（校验、类型推导）
+    - [x] `kv.collection` 序列化/反序列化
+- [ ] 适配器：`better-sqlite3` / `sql.js` / `D1` / `PostgreSQL` 等
+- [ ] 迁移 / 数据升级工具

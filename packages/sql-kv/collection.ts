@@ -7,7 +7,7 @@
  * @module "@chrock-studio/sql-kv/collection"
  */
 
-import type { CollectionConfig, Filter, SQLAdapter, SQLInputValue } from "./types.ts";
+import type { CollectionConfig, Filter, QueryOptions, SortSpec, SQLAdapter, SQLInputValue } from "./types.ts";
 import type { Store } from "./store.ts";
 import { raw } from "./sql.ts";
 import { sql as compileSQL } from "./sql.ts";
@@ -115,9 +115,71 @@ export class Collection<T extends Record<string, unknown>> {
     return this.store.tableName;
   }
 
+  /**
+   * Build an ORDER BY clause from sort specifications.
+   *
+   * Each sort spec's `field` is mapped to a JSON path expression.
+   * Returns an empty string and no params if no sort specs are given.
+   */
+  private buildOrderBy(specs: SortSpec[]): { clause: string; params: SQLInputValue[] } {
+    if (specs.length === 0) {
+      return { clause: "", params: [] };
+    }
+
+    const parts = specs.map((s) => {
+      const dir = s.direction === "desc" ? "DESC" : "ASC";
+      return `__value->>'$.${s.field}' ${dir}`;
+    });
+
+    return { clause: `ORDER BY ${parts.join(", ")}`, params: [] };
+  }
+
+  /**
+   * Build a LIMIT / OFFSET clause from query options.
+   */
+  private buildPagination({ limit, offset }: QueryOptions): { clause: string; params: SQLInputValue[] } {
+    const params: SQLInputValue[] = [];
+
+    if (limit === undefined && offset === undefined) {
+      return { clause: "", params: [] };
+    }
+
+    const clause: string[] = [];
+
+    clause.push(`LIMIT ?`);
+    params.push(limit ?? 999999999);
+
+    clause.push(`OFFSET ?`);
+    params.push(offset ?? 0);
+
+    return { clause: clause.join(" "), params };
+  }
+
+  /**
+   * Normalize query options: coerce `orderBy` to an array of SortSpec.
+   */
+  private normalizeOptions(options?: QueryOptions): QueryOptions & { orderBy: SortSpec[] } {
+    const orderBy = options?.orderBy ? Array.isArray(options.orderBy) ? options.orderBy : [options.orderBy] : [];
+
+    return {
+      limit: options?.limit,
+      offset: options?.offset,
+      orderBy,
+    };
+  }
+
   // -----------------------------------------------------------------------
   // CRUD operations
   // -----------------------------------------------------------------------
+
+  private buildInsert(items: [key: string, value: unknown][]): { sql: string; params: SQLInputValue[] } {
+    return {
+      sql: `INSERT OR REPLACE INTO ${this.tableName} (__key, __value) VALUES ${
+        Array.from({ length: items.length }, () => "(?, ?)").join(",")
+      }`,
+      params: items.flat(1) as SQLInputValue[],
+    };
+  }
 
   /**
    * Set (insert or replace) an item in the collection.
@@ -142,12 +204,22 @@ export class Collection<T extends Record<string, unknown>> {
     const parsed = await this.config.schema.encodeAsync(value) as T;
     const storeValue = JSON.stringify(parsed);
 
-    await this.adapter.run(
-      `INSERT OR REPLACE INTO ${this.tableName} (__key, __value) VALUES (?, ?)`,
-      [storeKey, storeValue],
-    );
+    const { sql, params } = this.buildInsert([[storeKey, storeValue]]);
+
+    await this.adapter.run(sql, params);
 
     return [parsed];
+  }
+  async setMany(items: [key: string, value: T][]): Promise<T[]> {
+    const entries = await Promise.all(
+      items.map(async ([key, value]) => [key, await this.config.schema.encodeAsync(value) as T] as const),
+    );
+    if (entries.length === 0) return [];
+
+    const sqlStatements = this.buildInsert(entries.map(([key, value]) => [this.makeKey(key), JSON.stringify(value)]));
+    await this.adapter.transaction((run) => run(sqlStatements.sql, sqlStatements.params));
+
+    return entries.map(([_, value]) => value);
   }
 
   /**
@@ -197,43 +269,77 @@ export class Collection<T extends Record<string, unknown>> {
   }
 
   /**
-   * List all items in the collection.
+   * List all items in the collection, with optional pagination and sorting.
    *
-   * @returns An array of all items in the collection
+   * @param options - Optional pagination (`limit`, `offset`) and sorting (`orderBy`)
+   * @returns An array of items in the collection
    *
    * @example
    * ```ts
+   * // List all
    * const allUsers = await users.list();
+   *
+   * // Paginated
+   * const page2 = await users.list({ limit: 10, offset: 10 });
+   *
+   * // Sorted
+   * const sorted = await users.list({ orderBy: { field: "name", direction: "asc" } });
+   *
+   * // Multi-field sort with pagination
+   * const result = await users.list({
+   *   orderBy: [{ field: "age", direction: "desc" }, { field: "name" }],
+   *   limit: 20,
+   *   offset: 0,
+   * });
    * ```
    */
-  async list(): Promise<T[]> {
-    const rows = await this.adapter.run(
-      `SELECT ${this.valuePath} AS value FROM ${this.tableName} WHERE ${this.collectionKeyPath} == ?`,
-      [this.config.name],
-    );
+  async list(options?: QueryOptions): Promise<T[]> {
+    const opts = this.normalizeOptions(options);
+    const params: SQLInputValue[] = [this.config.name];
+
+    const { clause: orderClause } = this.buildOrderBy(opts.orderBy);
+    const { clause: paginationClause, params: paginationParams } = this.buildPagination(opts);
+
+    const sql = [
+      `SELECT ${this.valuePath} AS value FROM ${this.tableName}`,
+      `WHERE ${this.collectionKeyPath} == ?`,
+      orderClause,
+      paginationClause,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const rows = await this.adapter.run(sql, [...params, ...paginationParams]);
 
     return await this.parseRows(rows as { value: string }[]);
   }
 
   /**
-   * Find items matching the given filters.
+   * Find items matching the given filters, with optional pagination and sorting.
    *
    * Each key in the filter object is a field path (dot notation for nested
    * fields), and each value is a {@link Filter} operator.
    *
    * @param filters - An object mapping field paths to filter operators
+   * @param options - Optional pagination (`limit`, `offset`) and sorting (`orderBy`)
    * @returns An array of matching items
    *
    * @example
    * ```ts
+   * // Basic filter
    * const results = await users.find({
-   *   mail: kv.regexp("[^@]+@.+\\..+"),
    *   age: kv.lt(20),
-   *   "address.city": kv.or(kv.eq("New York"), kv.eq("Washington")),
    * });
+   *
+   * // Filter with pagination and sorting
+   * const paged = await users.find(
+   *   { age: kv.gte(18) },
+   *   { orderBy: { field: "name" }, limit: 10, offset: 0 },
+   * );
    * ```
    */
-  async find(filters: Record<string, Filter>): Promise<T[]> {
+  async find(filters: Record<string, Filter>, options?: QueryOptions): Promise<T[]> {
+    const opts = this.normalizeOptions(options);
     const conditions: string[] = [];
     const params: SQLInputValue[] = [];
 
@@ -248,8 +354,19 @@ export class Collection<T extends Record<string, unknown>> {
       params.push(...p);
     }
 
-    const sql = `SELECT ${this.valuePath} AS value FROM ${this.tableName} WHERE ${conditions.join(" AND ")}`;
-    const rows = await this.adapter.run(sql, params);
+    const { clause: orderClause } = this.buildOrderBy(opts.orderBy);
+    const { clause: paginationClause, params: paginationParams } = this.buildPagination(opts);
+
+    const sql = [
+      `SELECT ${this.valuePath} AS value FROM ${this.tableName}`,
+      `WHERE ${conditions.join(" AND ")}`,
+      orderClause,
+      paginationClause,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const rows = await this.adapter.run(sql, [...params, ...paginationParams]);
 
     return await this.parseRows(rows as { value: string }[]);
   }

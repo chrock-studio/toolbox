@@ -12,7 +12,7 @@ import { z } from "zod";
 import { isRaw, KV, raw, sql } from "./mod.ts";
 import type { SQLAdapter } from "./types.ts";
 import { and, between, eq, gt, gte, isIn, isNotNull, isNull, like, lt, lte, neq, notIn, or, regexp } from "./filter.ts";
-import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import { DatabaseSync, type SQLInputValue, type StatementSync } from "node:sqlite";
 import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_", 8);
@@ -33,7 +33,17 @@ class SQLiteAdapter implements SQLAdapter {
   }
 
   run(sql: string, inputs: SQLInputValue[]): Promise<unknown[] & Partial<{ rows: number; lastId: unknown }>> {
-    const stmt = this.db.prepare(sql);
+    console.log({
+      "Executing SQL": sql,
+      "With inputs": inputs,
+    });
+    let stmt: StatementSync;
+    try {
+      stmt = this.db.prepare(sql);
+    } catch (e) {
+      console.error("Error:", { e, sql, inputs });
+      throw e;
+    }
     const isQuery = sql.trim().toUpperCase().startsWith("SELECT");
 
     if (isQuery) {
@@ -392,9 +402,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       schema: z.object({ id: z.string(), city: z.string() }),
     });
 
-    await users.set("u1", { id: "u1", city: "New York" });
-    await users.set("u2", { id: "u2", city: "Washington" });
-    await users.set("u3", { id: "u3", city: "Chicago" });
+    await users.setMany([
+      ["u1", { id: "u1", city: "New York" }],
+      ["u2", { id: "u2", city: "Washington" }],
+      ["u3", { id: "u3", city: "Chicago" }],
+    ]);
 
     const items = await users.find({
       city: kvdb.or(kvdb.eq("New York"), kvdb.eq("Washington")),
@@ -410,8 +422,10 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       schema: z.object({ id: z.string(), name: z.string() }),
     });
 
-    await users.set("u1", { id: "u1", name: "Alice" });
-    await users.set("u2", { id: "u2", name: "Bob" });
+    await users.setMany([
+      ["u1", { id: "u1", name: "Alice" }],
+      ["u2", { id: "u2", name: "Bob" }],
+    ]);
     await users.deleteMany(["u1"]);
 
     const remaining = await users.list();
@@ -438,9 +452,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     });
 
     // Insert some data so the query planner has data to consider
-    await users.set("u1", { id: "u1", name: "Alice", age: 25 });
-    await users.set("u2", { id: "u2", name: "Bob", age: 35 });
-    await users.set("u3", { id: "u3", name: "Charlie", age: 30 });
+    await users.setMany([
+      ["u1", { id: "u1", name: "Alice", age: 25 }],
+      ["u2", { id: "u2", name: "Bob", age: 35 }],
+      ["u3", { id: "u3", name: "Charlie", age: 30 }],
+    ]);
 
     // Run EXPLAIN QUERY PLAN on the same query that Collection.list() uses
     const tableName = kv.tableName;
@@ -480,6 +496,226 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     } AS name FROM ${users.table} WHERE __value->'$.mail' LIKE ${"%@example.com"}`;
 
     assertEquals(rows.length, 0);
+  });
+
+  // =======================================================================
+  // Pagination tests
+  // =======================================================================
+
+  await t.step("Collection.list() with limit returns at most N items", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    await users.setMany(Array.from({ length: 10 }, (_, i) => [`u${i}`, { id: `u${i}`, name: `User${i}` }] as const));
+
+    const limited = await users.list({ limit: 3 });
+    assertEquals(limited.length, 3);
+  });
+
+  await t.step("Collection.list() with offset skips items", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    for (let i = 0; i < 10; i++) {
+      await users.set(`u${i}`, { id: `u${i}`, name: `User${i}` });
+    }
+
+    const all = await users.list({ orderBy: { field: "id" } });
+    assertEquals(all.length, 10);
+    assertEquals(all[0].id, "u0");
+
+    const offset = await users.list({ orderBy: { field: "id" }, offset: 5 });
+    assertEquals(offset.length, 5);
+    assertEquals(offset[0].id, "u5");
+  });
+
+  await t.step("Collection.list() with limit + offset paginates correctly", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    // for (let i = 0; i < 10; i++) {
+    //   await users.set(`u${i}`, { id: `u${i}`, name: `User${i}` });
+    // }
+    await users.setMany(Array.from({ length: 10 }, (_, i) => [`u${i}`, { id: `u${i}`, name: `User${i}` }] as const));
+
+    // Page 1: first 5 items
+    const page1 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 0 });
+    assertEquals(page1.length, 5);
+    assertEquals(page1[0].id, "u0");
+    assertEquals(page1[4].id, "u4");
+
+    // Page 2: next 5 items
+    const page2 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 5 });
+    assertEquals(page2.length, 5);
+    assertEquals(page2[0].id, "u5");
+    assertEquals(page2[4].id, "u9");
+
+    // Page 5 (last): items 20-24 but only 10 exist
+    const page5 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 20 });
+    assertEquals(page5.length, 0);
+  });
+
+  // =======================================================================
+  // Sorting tests
+  // =======================================================================
+
+  await t.step("Collection.list() with single-field ascending sort", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    await users.set("u1", { id: "u1", name: "Charlie" });
+    await users.set("u2", { id: "u2", name: "Alice" });
+    await users.set("u3", { id: "u3", name: "Bob" });
+
+    const sorted = await users.list({ orderBy: { field: "name", direction: "asc" } });
+    assertEquals(sorted.length, 3);
+    assertEquals(sorted[0].name, "Alice");
+    assertEquals(sorted[1].name, "Bob");
+    assertEquals(sorted[2].name, "Charlie");
+  });
+
+  await t.step("Collection.list() with descending sort", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    await users.set("u1", { id: "u1", name: "Alice" });
+    await users.set("u2", { id: "u2", name: "Bob" });
+    await users.set("u3", { id: "u3", name: "Charlie" });
+
+    const sorted = await users.list({ orderBy: { field: "name", direction: "desc" } });
+    assertEquals(sorted.length, 3);
+    assertEquals(sorted[0].name, "Charlie");
+    assertEquals(sorted[1].name, "Bob");
+    assertEquals(sorted[2].name, "Alice");
+  });
+
+  await t.step("Collection.list() with multi-field sort", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string(), age: z.number() }),
+    });
+
+    await users.set("u1", { id: "u1", name: "Alice", age: 30 });
+    await users.set("u2", { id: "u2", name: "Bob", age: 25 });
+    await users.set("u3", { id: "u3", name: "Alice", age: 20 });
+
+    // Sort by name ASC, then age DESC
+    const sorted = await users.list({
+      orderBy: [
+        { field: "name", direction: "asc" },
+        { field: "age", direction: "desc" },
+      ],
+    });
+
+    assertEquals(sorted.length, 3);
+    assertEquals(sorted[0].name, "Alice");
+    assertEquals(sorted[0].age, 30);
+    assertEquals(sorted[1].name, "Alice");
+    assertEquals(sorted[1].age, 20);
+    assertEquals(sorted[2].name, "Bob");
+  });
+
+  await t.step("Collection.list() with sort defaults to ascending", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    await users.set("u1", { id: "u1", name: "Charlie" });
+    await users.set("u2", { id: "u2", name: "Alice" });
+    await users.set("u3", { id: "u3", name: "Bob" });
+
+    const sorted = await users.list({ orderBy: { field: "name" } });
+    assertEquals(sorted[0].name, "Alice");
+    assertEquals(sorted[1].name, "Bob");
+    assertEquals(sorted[2].name, "Charlie");
+  });
+
+  await t.step("Collection.find() with pagination", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string(), age: z.number() }),
+    });
+
+    for (let i = 0; i < 10; i++) {
+      await users.set(`u${i}`, { id: `u${i}`, name: `User${i}`, age: 20 + i });
+    }
+
+    const results = await users.find(
+      { age: gte(22) },
+      { orderBy: { field: "age" }, limit: 3, offset: 1 },
+    );
+
+    assertEquals(results.length, 3);
+    assertEquals(results[0].age, 23);
+    assertEquals(results[1].age, 24);
+    assertEquals(results[2].age, 25);
+  });
+
+  await t.step("Collection.find() with sorting", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string(), age: z.number() }),
+    });
+
+    await users.set("u1", { id: "u1", name: "Charlie", age: 35 });
+    await users.set("u2", { id: "u2", name: "Alice", age: 25 });
+    await users.set("u3", { id: "u3", name: "Bob", age: 30 });
+
+    const results = await users.find(
+      { age: gte(20) },
+      { orderBy: { field: "name", direction: "desc" } },
+    );
+
+    assertEquals(results.length, 3);
+    assertEquals(results[0].name, "Charlie");
+    assertEquals(results[1].name, "Bob");
+    assertEquals(results[2].name, "Alice");
+  });
+
+  await t.step("Collection.list() with sort + limit + offset combined", async () => {
+    const kv = await kvdb.store(`kv_${nanoid()}`);
+    const users = kv.collection({
+      name: "users",
+      schema: z.object({ id: z.string(), name: z.string() }),
+    });
+
+    for (let i = 0; i < 10; i++) {
+      await users.set(`u${i}`, { id: `u${i}`, name: `User${i}` });
+    }
+
+    // Sort by id DESC, get 3 items after skipping 2
+    const result = await users.list({
+      orderBy: { field: "id", direction: "desc" },
+      limit: 3,
+      offset: 2,
+    });
+
+    assertEquals(result.length, 3);
+    // ids descending: u9, u8, u7, u6, u5, ...
+    // skip 2 (u9, u8) → u7, u6, u5
+    assertEquals(result[0].id, "u7");
+    assertEquals(result[1].id, "u6");
+    assertEquals(result[2].id, "u5");
   });
 });
 

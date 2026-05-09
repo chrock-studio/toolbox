@@ -111,3 +111,44 @@ export interface RawSQL {
   readonly _raw: true;
   readonly sql: string;
 }
+
+/**
+ * Sort direction for ORDER BY clauses.
+ */
+export type SortDirection = "asc" | "desc";
+
+/**
+ * A single sort specification for query ordering.
+ *
+ * @example
+ * ```ts
+ * { field: "name", direction: "asc" }
+ * { field: "age", direction: "desc" }
+ * ```
+ */
+export interface SortSpec {
+  /** The field path to sort by (dot notation for nested fields). */
+  field: string;
+  /** The sort direction; defaults to `"asc"` if omitted. */
+  direction?: SortDirection;
+}
+
+/**
+ * Options for collection queries that support pagination and ordering.
+ *
+ * @example
+ * ```ts
+ * { limit: 10, offset: 20, orderBy: [{ field: "name", direction: "asc" }] }
+ * ```
+ */
+export interface QueryOptions {
+  /** Maximum number of items to return (SQL LIMIT). */
+  limit?: number;
+  /** Number of items to skip (SQL OFFSET). */
+  offset?: number;
+  /**
+   * Sort specifications for the result ordering.
+   * A single `SortSpec` or an array of `SortSpec`s.
+   */
+  orderBy?: SortSpec | SortSpec[];
+}

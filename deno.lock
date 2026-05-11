@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@standard-schema/spec@^1.1.0": "1.1.0",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "npm:alien-signals@^3.1.2": "3.1.2",
@@ -10,6 +11,9 @@
     "npm:zod@^4.3.6": "4.3.6"
   },
   "jsr": {
+    "@standard-schema/spec@1.1.0": {
+      "integrity": "2ccd54513cd9c960bd155ab569b1a901bc99c6f9ad29559d3f38a28c91c1822d"
+    },
     "@std/assert@1.0.19": {
       "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
       "dependencies": [
@@ -52,7 +56,7 @@
     "members": {
       "packages/overload": {
         "dependencies": [
-          "npm:zod@^4.3.6"
+          "jsr:@standard-schema/spec@^1.1.0"
         ]
       },
       "packages/signals": {

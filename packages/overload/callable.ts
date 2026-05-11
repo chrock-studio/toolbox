@@ -17,6 +17,14 @@
  *
  * @module "@chrock-studio/overload/callable.ts"
  */
+
+/**
+ * Wraps a function as a callable object, allowing it to be invoked as a
+ * function while still having prototype methods.
+ *
+ * The constructor replaces the function's prototype with the class instance,
+ * enabling method access on the returned callable.
+ */
 export const Callable = class {
   constructor(fn: (...args: any[]) => any) {
     Object.setPrototypeOf(fn, this);

@@ -1,6 +1,6 @@
 {
   "name": "@chrock-studio/sql-kv",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "A simple key-value store built on top of SQL databases.",
   "exports": {

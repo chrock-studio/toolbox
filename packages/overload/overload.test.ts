@@ -1,5 +1,16 @@
+import { check } from "./checker.ts";
 import { Overload } from "./overload.ts";
 import { assertEquals, assertThrows } from "@std/assert";
+
+const str = check((x): x is string => typeof x === "string");
+const num = check((x): x is number => typeof x === "number");
+const user = check((x): x is { name: string; age: number } =>
+  typeof x === "object" && x !== null &&
+  "name" in x && typeof (x as { name: unknown }).name === "string" &&
+  "age" in x && typeof (x as { age: unknown }).age === "number"
+);
+const strArr = check((x): x is string[] => Array.isArray(x) && x.every((item): item is string => typeof item === "string"));
+const numArr = check((x): x is number[] => Array.isArray(x) && x.every((item): item is number => typeof item === "number"));
 
 Deno.test("Overload", async (t) => {
   await t.step("withFallback", async (t) => {
@@ -17,7 +28,7 @@ Deno.test("Overload", async (t) => {
       const fn = Overload
         .withFallback((..._args: unknown[]) => "no match")
         .overload(
-          [(x): x is string => typeof x === "string"],
+          [str],
           (s) => `string: ${s}`,
         );
       assertEquals(fn(123), "no match");
@@ -30,7 +41,7 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback(() => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             (s) => `Hello, ${s}!`,
           );
         assertEquals(fn("World"), "Hello, World!");
@@ -40,7 +51,7 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             (s) => `Hello, ${s}!`,
           );
         assertEquals(fn(123), "fallback");
@@ -52,11 +63,11 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback(() => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             (s) => `string: ${s}`,
           )
           .overload(
-            [(x): x is number => typeof x === "number"],
+            [num],
             (n) => `number: ${n}`,
           );
         assertEquals(fn("test"), "string: test");
@@ -71,14 +82,14 @@ Deno.test("Overload", async (t) => {
             return "fallback";
           })
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             (s) => {
               order.push("string");
               return `string: ${s}`;
             },
           )
           .overload(
-            [(x: unknown): x is string => typeof x === "string"],
+            [str],
             (s) => {
               order.push("string2");
               return `string2: ${s}`;
@@ -92,11 +103,11 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "no match")
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             (s) => `string: ${s}`,
           )
           .overload(
-            [(x): x is number => typeof x === "number"],
+            [num],
             (n) => `number: ${n}`,
           );
         assertEquals(fn(true), "no match");
@@ -108,10 +119,7 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [
-              (x): x is string => typeof x === "string",
-              (x): x is number => typeof x === "number",
-            ],
+            [str, num],
             (name, age) => `${name} is ${age} years old`,
           );
         assertEquals(fn("Alice", 25), "Alice is 25 years old");
@@ -121,10 +129,7 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [
-              (x): x is string => typeof x === "string",
-              (x): x is number => typeof x === "number",
-            ],
+            [str, num],
             (name, age) => `${name} is ${age} years old`,
           );
         assertEquals(fn("Alice", "25"), "fallback");
@@ -136,8 +141,8 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
-            (x): x is number => typeof x === "number",
+            [str],
+            num,
             (s, ...rest) => `string: ${s}, rest: ${rest.join(",")}`,
           );
         assertEquals(fn("hello", 1, 2, 3), "string: hello, rest: 1,2,3");
@@ -147,8 +152,8 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
-            (x): x is number => typeof x === "number",
+            [str],
+            num,
             (s, ...rest) => `string: ${s}, rest: ${rest.join(",")}`,
           );
         assertEquals(fn("hello", 1, "not a number"), "fallback");
@@ -158,8 +163,8 @@ Deno.test("Overload", async (t) => {
         const fn = Overload
           .withFallback((..._args: unknown[]) => "fallback")
           .overload(
-            [(x): x is string => typeof x === "string"],
-            (x): x is number => typeof x === "number",
+            [str],
+            num,
             (s, ...rest) => `string: ${s}, rest: ${rest.join(",")}`,
           );
         assertEquals(fn("hello"), "string: hello, rest: ");
@@ -189,7 +194,7 @@ Deno.test("Overload", async (t) => {
             return this?.name ?? "no context";
           })
           .overload(
-            [(x): x is string => typeof x === "string"],
+            [str],
             function (this: any, s: string) {
               return `${this.name}: ${s}`;
             },
@@ -204,11 +209,11 @@ Deno.test("Overload", async (t) => {
     await t.step("returns new Overload instance on each overload", () => {
       const fn1 = Overload.withFallback((..._args: unknown[]) => "fallback");
       const fn2 = fn1.overload(
-        [(x): x is string => typeof x === "string"],
+        [str],
         (s) => `string: ${s}`,
       );
       const fn3 = fn2.overload(
-        [(x): x is number => typeof x === "number"],
+        [num],
         (n) => `number: ${n}`,
       );
       // Original should still work
@@ -224,19 +229,15 @@ Deno.test("Overload", async (t) => {
   });
 
   await t.step("complex scenarios", async (t) => {
-    await t.step("recursive type checking", () => {
-      interface User {
-        name: string;
-        age: number;
-      }
+    await t.step("object schema checking", () => {
       const fn = Overload
         .withFallback((..._args: unknown[]) => "unknown")
         .overload(
-          [(x): x is User => typeof x === "object" && x !== null && "name" in x && "age" in x],
-          (user) => `${user.name} is ${user.age}`,
+          [user],
+          (u) => `${u.name} is ${u.age}`,
         )
         .overload(
-          [(x): x is string => typeof x === "string"],
+          [str],
           (s) => `string: ${s}`,
         );
       assertEquals(fn({ name: "Alice", age: 25 }), "Alice is 25");
@@ -244,15 +245,15 @@ Deno.test("Overload", async (t) => {
       assertEquals(fn(123), "unknown");
     });
 
-    await t.step("array type checking", () => {
+    await t.step("array schema checking", () => {
       const fn = Overload
         .withFallback((..._args: unknown[]) => "unknown")
         .overload(
-          [(x): x is string[] => Array.isArray(x) && x.every((item) => typeof item === "string")],
+          [strArr],
           (arr) => `strings: ${arr.join(", ")}`,
         )
         .overload(
-          [(x): x is number[] => Array.isArray(x) && x.every((item) => typeof item === "number")],
+          [numArr],
           (arr) => `numbers: ${arr.join(", ")}`,
         );
       assertEquals(fn(["a", "b", "c"]), "strings: a, b, c");

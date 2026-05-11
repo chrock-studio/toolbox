@@ -1,14 +1,16 @@
+import { check } from "./checker.ts";
 import { Matcher } from "./matcher.ts";
 import { assertEquals, assertFalse } from "@std/assert";
+
+const str = check((x): x is string => typeof x === "string");
+const num = check((x): x is number => typeof x === "number");
+const bool = check((x): x is boolean => typeof x === "boolean");
 
 Deno.test("Matcher", async (t) => {
   await t.step("without Rest Parameters", async (t) => {
     await t.step("check() returns true for matching input", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 
@@ -17,10 +19,7 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("check() returns false for non-matching input", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 
@@ -29,37 +28,28 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("call returns expected result", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 
       assertEquals(matcher.implement("John Doe", 18), "Name: John Doe, Age: 18");
     });
 
-    await t.step("check() returns true for extra elements", () => {
+    await t.step("check() returns true for extra elements without rest", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 
-      assertFalse(matcher.check(["John Doe", 18, true]));
+      assertEquals(matcher.check(["John Doe", 18, true]), true);
     });
   });
 
   await t.step("with Rest Parameters", async (t) => {
     await t.step("check() returns true for matching input with rest", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
-        (x): x is boolean => typeof x === "boolean",
+        [str, num],
+        bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
@@ -68,11 +58,8 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("check() returns false when rest elements don't match", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
-        (x): x is boolean => typeof x === "boolean",
+        [str, num],
+        bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
@@ -81,11 +68,8 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("check() returns true for input without rest elements", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
-        (x): x is boolean => typeof x === "boolean",
+        [str, num],
+        bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
@@ -94,11 +78,8 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("call returns expected result with rest elements", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
-        (x): x is boolean => typeof x === "boolean",
+        [str, num],
+        bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
@@ -110,11 +91,8 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("call returns expected result without rest elements", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
-        (x): x is boolean => typeof x === "boolean",
+        [str, num],
+        bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
@@ -137,7 +115,7 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("single checker", () => {
       const matcher = Matcher.make(
-        [(x): x is string => typeof x === "string"],
+        [str],
         (str) => `Got: ${str}`,
       );
 
@@ -146,10 +124,7 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("check() returns false for insufficient elements", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 
@@ -158,10 +133,7 @@ Deno.test("Matcher", async (t) => {
 
     await t.step("check() returns false for empty input", () => {
       const matcher = Matcher.make(
-        [
-          (x): x is string => typeof x === "string",
-          (x): x is number => typeof x === "number",
-        ],
+        [str, num],
         (name, age) => `Name: ${name}, Age: ${age}`,
       );
 

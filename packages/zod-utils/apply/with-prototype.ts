@@ -130,12 +130,7 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
    * console.log(user.info()); // -> "John Doe" (18)
    * ```
    */
-  <
-    O extends object,
-    I extends unknown,
-    M extends object,
-    T extends zod.util.Extend<O, M>,
-  >(
+  <O extends object, I extends unknown, M extends object, T extends zod.util.Extend<O, M>>(
     schema: zod.ZodType<O, I>,
     methods: M & ThisType<T>,
   ): hkt.ApplyW<P, [I, T, M]>;
@@ -167,12 +162,7 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
    * console.log(user.info()); // -> "John Doe" (18)
    * ```
    */
-  <
-    O extends object,
-    I extends unknown,
-    M extends object,
-    T extends zod.util.Extend<O, M>,
-  >(
+  <O extends object, I extends unknown, M extends object, T extends zod.util.Extend<O, M>>(
     methods: M & ThisType<T>,
   ): (schema: zod.ZodType<O, I>) => hkt.ApplyW<P, [I, T, M]>;
 
@@ -285,9 +275,7 @@ export interface WithPrototype<P extends Overwrite = Overwrite.Default> {
  * assertEquals(user.fullInformation(), '"John Doe" (Age: 18) (Length: 160)');
  * ```
  */
-export const withPrototype = ((
-  ...args: [schema: zod.ZodType<object>, methods: object] | [methods: object]
-) => {
+export const withPrototype = ((...args: [schema: zod.ZodType<object>, methods: object] | [methods: object]) => {
   if (args.length === 1) {
     return (schema: zod.ZodType<object>) => withPrototype(schema, args[0]);
   } else {

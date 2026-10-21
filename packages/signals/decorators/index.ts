@@ -2,9 +2,7 @@ import type { ClassAccessorDecorator, ClassGetterDecorator } from "./types.ts";
 import type { Computed, Signal } from "../types.ts";
 import { computed, signal } from "alien-signals";
 
-const readonly: ClassGetterDecorator = <This extends object, Value = unknown>(
-  target: (this: This) => Value,
-) => {
+const readonly: ClassGetterDecorator = <This extends object, Value = unknown>(target: (this: This) => Value) => {
   const caches = new WeakMap<This, Computed<Value>>();
 
   return function (this: This) {

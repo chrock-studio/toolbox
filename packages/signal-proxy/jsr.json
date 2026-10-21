@@ -1,0 +1,12 @@
+{
+  "name": "@chrock-studio/signal-proxy",
+  "version": "0.1.2",
+  "license": "MIT",
+  "exports": "./index.ts",
+  "imports": {
+    "@chrock-studio/shared": "jsr:@chrock-studio/shared@^0.2.0"
+  },
+  "publish": {
+    "exclude": ["**/*.test.ts", "package.json"]
+  }
+}

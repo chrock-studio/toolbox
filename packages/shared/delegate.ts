@@ -47,10 +47,7 @@ export interface Delegate<T> {
  * @param args - Either empty (for getter) or a single value (for setter)
  * @returns The current value when called as getter, undefined when called as setter
  */
-function delegateOperator<T>(
-  this: { getter: () => T; setter: (value: T) => void },
-  ...args: [] | [value: T]
-) {
+function delegateOperator<T>(this: { getter: () => T; setter: (value: T) => void }, ...args: [] | [value: T]) {
   if (args.length) this.setter.apply(null, args);
   else return this.getter.apply(null);
 }

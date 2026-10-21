@@ -1,10 +1,10 @@
-import { assertEquals, assertRejects } from "@std/assert";
-import { createBlock, createAsyncBlock } from "./mod.ts";
+import { describe, expect, test } from "bun:test";
+import { createBlock, createAsyncBlock } from "./index.ts";
 
 // Tests for createBlock
 
-Deno.test("createBlock", async (t) => {
-  await t.step("should call start function with provided arguments", () => {
+describe("createBlock", () => {
+  test("should call start function with provided arguments", () => {
     let startCalled = false;
     let receivedArg = "";
 
@@ -19,11 +19,11 @@ Deno.test("createBlock", async (t) => {
 
     block(() => "result", "test-arg");
 
-    assertEquals(startCalled, true);
-    assertEquals(receivedArg, "test-arg");
+    expect(startCalled).toBe(true);
+    expect(receivedArg).toBe("test-arg");
   });
 
-  await t.step("should call end function after body executes", () => {
+  test("should call end function after body executes", () => {
     let endCalled = false;
 
     const block = createBlock(
@@ -35,10 +35,10 @@ Deno.test("createBlock", async (t) => {
 
     block(() => "result");
 
-    assertEquals(endCalled, true);
+    expect(endCalled).toBe(true);
   });
 
-  await t.step("should pass cache from start to body", () => {
+  test("should pass cache from start to body", () => {
     const block = createBlock(
       (value: number) => ({ value }),
       () => {},
@@ -46,10 +46,10 @@ Deno.test("createBlock", async (t) => {
 
     const result = block((cache) => cache.value * 2, 5);
 
-    assertEquals(result, 10);
+    expect(result).toBe(10);
   });
 
-  await t.step("should return the result from body function", () => {
+  test("should return the result from body function", () => {
     const block = createBlock(
       () => ({ data: "test" }),
       () => {},
@@ -57,10 +57,10 @@ Deno.test("createBlock", async (t) => {
 
     const result = block(() => "returned-value");
 
-    assertEquals(result, "returned-value");
+    expect(result).toBe("returned-value");
   });
 
-  await t.step("should call end function even when body throws", () => {
+  test("should call end function even when body throws", () => {
     let endCalled = false;
 
     const block = createBlock(
@@ -75,13 +75,13 @@ Deno.test("createBlock", async (t) => {
         throw new Error("test error");
       });
     } catch (e) {
-      assertEquals((e as Error).message, "test error");
+      expect((e as Error).message).toBe("test error");
     }
 
-    assertEquals(endCalled, true);
+    expect(endCalled).toBe(true);
   });
 
-  await t.step("should pass error to end function when body throws", () => {
+  test("should pass error to end function when body throws", () => {
     let capturedError: unknown;
 
     const block = createBlock(
@@ -96,13 +96,13 @@ Deno.test("createBlock", async (t) => {
         throw new Error("body error");
       });
     } catch (e) {
-      assertEquals((e as Error).message, "body error");
+      expect((e as Error).message).toBe("body error");
     }
 
-    assertEquals((capturedError as Error).message, "body error");
+    expect((capturedError as Error).message).toBe("body error");
   });
 
-  await t.step("should pass undefined result to end function when body throws", () => {
+  test("should pass undefined result to end function when body throws", () => {
     let capturedResult: unknown = "not-undefined";
 
     const block = createBlock(
@@ -120,10 +120,10 @@ Deno.test("createBlock", async (t) => {
       // expected
     }
 
-    assertEquals(capturedResult, undefined);
+    expect(capturedResult).toBe(undefined);
   });
 
-  await t.step("should pass result to end function on success", () => {
+  test("should pass result to end function on success", () => {
     let capturedResult: unknown;
 
     const block = createBlock(
@@ -135,10 +135,10 @@ Deno.test("createBlock", async (t) => {
 
     block(() => "success-result");
 
-    assertEquals(capturedResult, "success-result");
+    expect(capturedResult).toBe("success-result");
   });
 
-  await t.step("should pass cache to end function", () => {
+  test("should pass cache to end function", () => {
     let capturedCache: unknown;
 
     const block = createBlock(
@@ -150,10 +150,10 @@ Deno.test("createBlock", async (t) => {
 
     block(() => {}, 42);
 
-    assertEquals(capturedCache, { id: 42, label: "item-42" });
+    expect(capturedCache).toStrictEqual({ id: 42, label: "item-42" });
   });
 
-  await t.step("should pass multiple arguments to start function", () => {
+  test("should pass multiple arguments to start function", () => {
     let capturedArgs: unknown[] = [];
 
     const block = createBlock(
@@ -166,10 +166,10 @@ Deno.test("createBlock", async (t) => {
 
     block(() => {}, 1, "hello", true);
 
-    assertEquals(capturedArgs, [1, "hello", true]);
+    expect(capturedArgs).toStrictEqual([1, "hello", true]);
   });
 
-  await t.step("should work as a counter block", () => {
+  test("should work as a counter block", () => {
     let counter = 0;
 
     const counterBlock = createBlock(
@@ -187,11 +187,11 @@ Deno.test("createBlock", async (t) => {
       return counter;
     }, 5);
 
-    assertEquals(result, 15);
-    assertEquals(counter, 0);
+    expect(result).toBe(15);
+    expect(counter).toBe(0);
   });
 
-  await t.step("should work as a resource tracker", () => {
+  test("should work as a resource tracker", () => {
     const resources: string[] = [];
 
     const resourceBlock = createBlock(
@@ -209,18 +209,14 @@ Deno.test("createBlock", async (t) => {
       return "done";
     }, "db-connection");
 
-    assertEquals(resources, [
-      "acquired: db-connection",
-      "using resource",
-      "released: db-connection",
-    ]);
+    expect(resources).toStrictEqual(["acquired: db-connection", "using resource", "released: db-connection"]);
   });
 });
 
 // Tests for createAsyncBlock
 
-Deno.test("createAsyncBlock", async (t) => {
-  await t.step("should call async start function with provided arguments", async () => {
+describe("createAsyncBlock", () => {
+  test("should call async start function with provided arguments", async () => {
     let startCalled = false;
     let receivedArg = "";
 
@@ -235,11 +231,11 @@ Deno.test("createAsyncBlock", async (t) => {
 
     await block(() => "result", "test-arg");
 
-    assertEquals(startCalled, true);
-    assertEquals(receivedArg, "test-arg");
+    expect(startCalled).toBe(true);
+    expect(receivedArg).toBe("test-arg");
   });
 
-  await t.step("should call async end function after body executes", async () => {
+  test("should call async end function after body executes", async () => {
     let endCalled = false;
 
     const block = createAsyncBlock(
@@ -249,10 +245,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     await block(() => "result");
 
-    assertEquals(endCalled, true);
+    expect(endCalled).toBe(true);
   });
 
-  await t.step("should pass cache from async start to body", async () => {
+  test("should pass cache from async start to body", async () => {
     const block = createAsyncBlock(
       (value: number) => Promise.resolve({ value }),
       () => {},
@@ -260,10 +256,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     const result = await block((cache) => cache.value * 2, 5);
 
-    assertEquals(result, 10);
+    expect(result).toBe(10);
   });
 
-  await t.step("should return the result from async body function", async () => {
+  test("should return the result from async body function", async () => {
     const block = createAsyncBlock(
       () => Promise.resolve({ data: "test" }),
       () => {},
@@ -271,10 +267,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     const result = await block(() => Promise.resolve("returned-value"));
 
-    assertEquals(result, "returned-value");
+    expect(result).toBe("returned-value");
   });
 
-  await t.step("should call end function even when async body throws", async () => {
+  test("should call end function even when async body throws", async () => {
     let endCalled = false;
 
     const block = createAsyncBlock(
@@ -282,16 +278,14 @@ Deno.test("createAsyncBlock", async (t) => {
       () => void (endCalled = true),
     );
 
-    await assertRejects(
-      () => block(() => Promise.reject(new Error("test error"))),
-      Error,
-      "test error",
-    );
+    const promise = block(() => Promise.reject(new Error("test error")));
+    await expect(promise).rejects.toThrow(Error);
+    await expect(promise).rejects.toThrow("test error");
 
-    assertEquals(endCalled, true);
+    expect(endCalled).toBe(true);
   });
 
-  await t.step("should pass error to async end function when body throws", async () => {
+  test("should pass error to async end function when body throws", async () => {
     let capturedError: unknown;
 
     const block = createAsyncBlock(
@@ -299,16 +293,14 @@ Deno.test("createAsyncBlock", async (t) => {
       (_cache, _result, error) => void (capturedError = error),
     );
 
-    await assertRejects(
-      () => block(() => Promise.reject(new Error("body error"))),
-      Error,
-      "body error",
-    );
+    const promise = block(() => Promise.reject(new Error("body error")));
+    await expect(promise).rejects.toThrow(Error);
+    await expect(promise).rejects.toThrow("body error");
 
-    assertEquals((capturedError as Error).message, "body error");
+    expect((capturedError as Error).message).toBe("body error");
   });
 
-  await t.step("should pass undefined result to end function when body throws", async () => {
+  test("should pass undefined result to end function when body throws", async () => {
     let capturedResult: unknown = "not-undefined";
 
     const block = createAsyncBlock(
@@ -316,12 +308,14 @@ Deno.test("createAsyncBlock", async (t) => {
       (_cache, result) => void (capturedResult = result),
     );
 
-    await assertRejects(() => block(() => Promise.reject(new Error("error"))), Error, "error");
+    const promise = block(() => Promise.reject(new Error("error")));
+    await expect(promise).rejects.toThrow(Error);
+    await expect(promise).rejects.toThrow("error");
 
-    assertEquals(capturedResult, undefined);
+    expect(capturedResult).toBe(undefined);
   });
 
-  await t.step("should pass result to end function on success", async () => {
+  test("should pass result to end function on success", async () => {
     let capturedResult: unknown;
 
     const block = createAsyncBlock(
@@ -331,10 +325,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     await block(() => Promise.resolve("success-result"));
 
-    assertEquals(capturedResult, "success-result");
+    expect(capturedResult).toBe("success-result");
   });
 
-  await t.step("should pass cache to end function", async () => {
+  test("should pass cache to end function", async () => {
     let capturedCache: unknown;
 
     const block = createAsyncBlock(
@@ -344,10 +338,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     await block(async () => {}, 42);
 
-    assertEquals(capturedCache, { id: 42, label: "item-42" });
+    expect(capturedCache).toStrictEqual({ id: 42, label: "item-42" });
   });
 
-  await t.step("should pass multiple arguments to async start function", async () => {
+  test("should pass multiple arguments to async start function", async () => {
     let capturedArgs: unknown[] = [];
 
     const block = createAsyncBlock(
@@ -360,10 +354,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     await block(async () => {}, 1, "hello", true);
 
-    assertEquals(capturedArgs, [1, "hello", true]);
+    expect(capturedArgs).toStrictEqual([1, "hello", true]);
   });
 
-  await t.step("should work with sync start and async body", async () => {
+  test("should work with sync start and async body", async () => {
     const block = createAsyncBlock(
       (value: number) => ({ value }),
       () => {},
@@ -374,10 +368,10 @@ Deno.test("createAsyncBlock", async (t) => {
       return cache.value * 2;
     }, 5);
 
-    assertEquals(result, 10);
+    expect(result).toBe(10);
   });
 
-  await t.step("should work with async start and sync body", async () => {
+  test("should work with async start and sync body", async () => {
     const block = createAsyncBlock(
       async (value: number) => {
         await Promise.resolve();
@@ -388,10 +382,10 @@ Deno.test("createAsyncBlock", async (t) => {
 
     const result = await block((cache) => cache.value * 2, 5);
 
-    assertEquals(result, 10);
+    expect(result).toBe(10);
   });
 
-  await t.step("should work as an async counter block", async () => {
+  test("should work as an async counter block", async () => {
     let counter = 0;
 
     const counterBlock = createAsyncBlock(
@@ -412,11 +406,11 @@ Deno.test("createAsyncBlock", async (t) => {
       return counter;
     }, 5);
 
-    assertEquals(result, 15);
-    assertEquals(counter, 0);
+    expect(result).toBe(15);
+    expect(counter).toBe(0);
   });
 
-  await t.step("should work as an async resource tracker", async () => {
+  test("should work as an async resource tracker", async () => {
     const resources: string[] = [];
 
     const resourceBlock = createAsyncBlock(
@@ -437,23 +431,21 @@ Deno.test("createAsyncBlock", async (t) => {
       return "done";
     }, "db-connection");
 
-    assertEquals(resources, [
-      "acquired: db-connection",
-      "using resource",
-      "released: db-connection",
-    ]);
+    expect(resources).toStrictEqual(["acquired: db-connection", "using resource", "released: db-connection"]);
   });
 
-  await t.step("should handle async end function that throws", async () => {
+  test("should handle async end function that throws", async () => {
     const block = createAsyncBlock(
       () => Promise.resolve({ value: "cache" }),
       () => Promise.reject(new Error("end error")),
     );
 
-    await assertRejects(() => block(() => Promise.resolve("result")), Error, "end error");
+    const promise = block(() => Promise.resolve("result"));
+    await expect(promise).rejects.toThrow(Error);
+    await expect(promise).rejects.toThrow("end error");
   });
 
-  await t.step("should preserve original error when end throws after body error", async () => {
+  test("should preserve original error when end throws after body error", async () => {
     let endCalled = false;
 
     const block = createAsyncBlock(
@@ -465,16 +457,14 @@ Deno.test("createAsyncBlock", async (t) => {
     );
 
     // The original error should be suppressed by the end error
-    await assertRejects(
-      () => block(() => Promise.reject(new Error("body error"))),
-      Error,
-      "end error",
-    );
+    const promise = block(() => Promise.reject(new Error("body error")));
+    await expect(promise).rejects.toThrow(Error);
+    await expect(promise).rejects.toThrow("end error");
 
-    assertEquals(endCalled, true);
+    expect(endCalled).toBe(true);
   });
 
-  await t.step("should await async body result before calling end", async () => {
+  test("should await async body result before calling end", async () => {
     const order: string[] = [];
 
     const block = createAsyncBlock(
@@ -494,6 +484,6 @@ Deno.test("createAsyncBlock", async (t) => {
       return "result";
     });
 
-    assertEquals(order, ["start", "body-start", "body-end", "end"]);
+    expect(order).toStrictEqual(["start", "body-start", "body-end", "end"]);
   });
 });

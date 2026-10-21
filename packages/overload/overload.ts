@@ -116,34 +116,36 @@ import type { UnionToIntersection } from "type-fest";
  * @template T - Tuple of matchers whose implementations form the callable.
  * @template F - Optional fallback function signature.
  */
-export type Overload<T extends Matcher[], F extends ((...args: any[]) => any) | undefined = undefined> =
-  & (T extends { length: 0 } ? F extends undefined ? Record<PropertyKey, never> : F
-    : UnionToIntersection<{ [key in keyof T]: T[key]["implement"] }[number]>)
-  & {
-    overload: {
-      <
-        const C extends StandardSchemaV1[],
-        R = void,
-        I extends (...args: InferProps<C>) => R = (...args: InferProps<C>) => R,
-      >(
-        checkers: C,
-        implement: I,
-      ): Overload<[Matcher<I>, ...T], F>;
-      <
-        const C extends StandardSchemaV1[],
-        Rest extends StandardSchemaV1,
-        R = void,
-        I extends (...args: [...InferProps<C>, ...StandardSchemaV1.InferOutput<Rest>[]]) => R = (
-          ...args: [...InferProps<C>, ...StandardSchemaV1.InferOutput<Rest>[]]
-        ) => R,
-      >(
-        checkers: C,
-        rest: Rest,
-        implement: I,
-      ): Overload<[Matcher<I>, ...T], F>;
-    };
-  }
-  & (F extends undefined ? Record<PropertyKey, never> : F);
+export type Overload<T extends Matcher[], F extends ((...args: any[]) => any) | undefined = undefined> = (T extends {
+  length: 0;
+}
+  ? F extends undefined
+    ? Record<PropertyKey, never>
+    : F
+  : UnionToIntersection<{ [key in keyof T]: T[key]["implement"] }[number]>) & {
+  overload: {
+    <
+      const C extends StandardSchemaV1[],
+      R = void,
+      I extends (...args: InferProps<C>) => R = (...args: InferProps<C>) => R,
+    >(
+      checkers: C,
+      implement: I,
+    ): Overload<[Matcher<I>, ...T], F>;
+    <
+      const C extends StandardSchemaV1[],
+      Rest extends StandardSchemaV1,
+      R = void,
+      I extends (...args: [...InferProps<C>, ...StandardSchemaV1.InferOutput<Rest>[]]) => R = (
+        ...args: [...InferProps<C>, ...StandardSchemaV1.InferOutput<Rest>[]]
+      ) => R,
+    >(
+      checkers: C,
+      rest: Rest,
+      implement: I,
+    ): Overload<[Matcher<I>, ...T], F>;
+  };
+} & (F extends undefined ? Record<PropertyKey, never> : F);
 /**
  * The `Overload` class provides type-safe runtime function overloading.
  *
@@ -237,7 +239,7 @@ export type Overload<T extends Matcher[], F extends ((...args: any[]) => any) | 
  *   );
  * ```
  */
-export const Overload = (class Overload extends Callable {
+export const Overload = class Overload extends Callable {
   /** Ordered list of matchers to test against on each invocation. */
   matchers: Matcher[];
   /** Optional fallback function invoked when no matcher matches. */
@@ -285,7 +287,7 @@ export const Overload = (class Overload extends Callable {
    * @returns A new `Overload` instance with the added matcher.
    */
   overload(...args: any[]): any {
-    return new Overload([Matcher.make(...args as [any, any]), ...this.matchers], this.fallback);
+    return new Overload([Matcher.make(...(args as [any, any])), ...this.matchers], this.fallback);
   }
 
   /**
@@ -300,7 +302,7 @@ export const Overload = (class Overload extends Callable {
   static withFallback(fn: (...args: any[]) => any) {
     return new Overload([], fn);
   }
-}) as {
+} as {
   new <const M extends Matcher[]>(matchers: M): Overload<M>;
   withFallback<Fn extends (...args: any[]) => any>(fn: Fn): Overload<[], Fn>;
 };

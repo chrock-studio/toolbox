@@ -1,0 +1,21 @@
+{
+  "name": "@chrock-studio/signals",
+  "version": "0.1.1",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./blocks": "./blocks/index.ts",
+    "./blocks/batch": "./blocks/batch.ts",
+    "./blocks/untrack": "./blocks/untrack.ts",
+    "./decorators": "./decorators/index.ts",
+    "./decorators/types": "./decorators/types.ts",
+    "./types": "./types.ts"
+  },
+  "dependencies": {
+    "@chrock-studio/code-block": "workspace:*",
+    "@chrock-studio/shared": "workspace:*",
+    "@chrock-studio/signal-proxy": "workspace:*",
+    "alien-signals": "^3.1.2"
+  }
+}

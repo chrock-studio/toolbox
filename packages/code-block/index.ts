@@ -211,29 +211,23 @@ import type { MaybePromise } from "@chrock-studio/shared";
  *   return count;
  * });
  */
-export const createBlock = <const Start extends (...args: any[]) => any>(
-  start: Start,
-  end: (
-    cache: ReturnType<Start>,
-    result?: unknown,
-    error?: unknown,
-  ) => void,
-) =>
-<Result>(
-  body: (cache: ReturnType<Start>) => Result,
-  ...args: Parameters<Start>
-): Result => {
-  const cache = start(...args) as ReturnType<Start>;
-  let result, error;
+export const createBlock =
+  <const Start extends (...args: any[]) => any>(
+    start: Start,
+    end: (cache: ReturnType<Start>, result?: unknown, error?: unknown) => void,
+  ) =>
+  <Result>(body: (cache: ReturnType<Start>) => Result, ...args: Parameters<Start>): Result => {
+    const cache = start(...args) as ReturnType<Start>;
+    let result, error;
 
-  try {
-    return (result = body(cache));
-  } catch (err) {
-    throw (error = err);
-  } finally {
-    end(cache, result as never, error);
-  }
-};
+    try {
+      return (result = body(cache));
+    } catch (err) {
+      throw (error = err);
+    } finally {
+      end(cache, result as never, error);
+    }
+  };
 
 /**
  * Creates an asynchronous code block for managing async resource acquisition and release.
@@ -307,29 +301,20 @@ export const createBlock = <const Start extends (...args: any[]) => any>(
  *   'resource-123'
  * );
  */
-export const createAsyncBlock = <
-  const Start extends (...args: any[]) => MaybePromise<any>,
-  Cache extends Awaited<ReturnType<Start>>,
->(
-  start: Start,
-  end: (
-    cache: Cache,
-    result?: unknown,
-    error?: unknown,
-  ) => MaybePromise<void>,
-) =>
-async <Result>(
-  body: (cache: Cache) => Result,
-  ...args: Parameters<Start>
-): Promise<Result> => {
-  const cache = (await start(...args)) as Cache;
-  let result, error;
+export const createAsyncBlock =
+  <const Start extends (...args: any[]) => MaybePromise<any>, Cache extends Awaited<ReturnType<Start>>>(
+    start: Start,
+    end: (cache: Cache, result?: unknown, error?: unknown) => MaybePromise<void>,
+  ) =>
+  async <Result>(body: (cache: Cache) => Result, ...args: Parameters<Start>): Promise<Result> => {
+    const cache = (await start(...args)) as Cache;
+    let result, error;
 
-  try {
-    return (result = await body(cache));
-  } catch (err) {
-    throw (error = err);
-  } finally {
-    await end(cache, result as never, error);
-  }
-};
+    try {
+      return (result = await body(cache));
+    } catch (err) {
+      throw (error = err);
+    } finally {
+      await end(cache, result as never, error);
+    }
+  };

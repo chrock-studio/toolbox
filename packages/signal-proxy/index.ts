@@ -118,17 +118,21 @@ type MatchFunction<O, K extends keyof O = keyof O> = keyof {
   [key in K as O[key] extends (...args: any[]) => any ? key : never]: true;
 };
 
-type MatchGetter<
-  O,
-  K extends MatchFunction<O, keyof O> = MatchFunction<O, keyof O>,
-  F = O[K],
-> = F extends (...args: infer R) => any ? (R extends { length: 0 } ? K : never) : never;
+type MatchGetter<O, K extends MatchFunction<O, keyof O> = MatchFunction<O, keyof O>, F = O[K]> = F extends (
+  ...args: infer R
+) => any
+  ? R extends { length: 0 }
+    ? K
+    : never
+  : never;
 
-type MatchSetter<
-  O,
-  K extends MatchFunction<O, keyof O> = MatchFunction<O, keyof O>,
-  F = O[K],
-> = F extends (...args: infer R) => any ? (R extends { length: 0 } ? never : K) : never;
+type MatchSetter<O, K extends MatchFunction<O, keyof O> = MatchFunction<O, keyof O>, F = O[K]> = F extends (
+  ...args: infer R
+) => any
+  ? R extends { length: 0 }
+    ? never
+    : K
+  : never;
 
 type SignalProxySetters<
   T extends object,
@@ -314,7 +318,7 @@ export const revocableSignalProxy = <T extends object>(obj: T): RevocableProxy<S
 
     caches.set(
       obj,
-      result = Proxy.revocable(obj as SignalProxy<T>, {
+      (result = Proxy.revocable(obj as SignalProxy<T>, {
         get(target, prop: string | symbol) {
           if (prop === Symbol.dispose || prop === Symbol.asyncDispose) {
             return result.revoke;
@@ -323,12 +327,12 @@ export const revocableSignalProxy = <T extends object>(obj: T): RevocableProxy<S
           if (!getter) {
             getters.set(
               prop,
-              getter = doMatch(
+              (getter = doMatch(
                 obj,
                 prop,
                 (_, getter) => () => hit(getter.call(target)),
                 () => () => Reflect.get(target, prop),
-              ),
+              )),
             );
           }
           return getter();
@@ -339,18 +343,18 @@ export const revocableSignalProxy = <T extends object>(obj: T): RevocableProxy<S
           if (!setter) {
             setters.set(
               prop,
-              setter = doMatch(
+              (setter = doMatch(
                 obj,
                 prop,
                 (_, setter) => (value) => setter.call(target, value),
                 () => (value) => Reflect.set(target, prop, value),
-              ),
+              )),
             );
           }
           setter(newValue);
           return true;
         },
-      }),
+      })),
     );
   }
 
@@ -380,9 +384,9 @@ const doMatch = <T, R>(
   prop: unknown,
   on: (prop: string, value: (...args: any[]) => any) => T,
   off: () => R,
-) => (match(prop) ? on(prop = prop.slice(0, -1), getProp(obj, prop as string)) : off());
+) => (match(prop) ? on((prop = prop.slice(0, -1)), getProp(obj, prop as string)) : off());
 
-const hit = (obj: unknown) => obj !== null && typeof obj === "object" ? createSignalProxy(obj) : obj;
+const hit = (obj: unknown) => (obj !== null && typeof obj === "object" ? createSignalProxy(obj) : obj);
 
 const errors = {
   NOT_FUNCTION: (prop: unknown) =>

@@ -59,8 +59,8 @@
  * ```
  */
 
-export * from "./blocks/mod.ts";
-export * from "./decorators/mod.ts";
+export * from "./blocks/index.ts";
+export * from "./decorators/index.ts";
 
 export { type Delegate, delegate } from "@chrock-studio/shared/delegate";
 export { createSignalProxy, revocableSignalProxy, type SignalProxy } from "@chrock-studio/signal-proxy";

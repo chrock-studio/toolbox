@@ -37,8 +37,12 @@ import { z } from "zod";
 
 // 只需要一个实现了 SQLAdapter 接口的适配器，此处假设 myDb 是某个 SQLite Client
 const db = new KV({
-  run(sql, inputs) { return myDb.prepare(sql).run(inputs); },
-  transaction(fn) { return myDb.transaction(fn); },
+  run(sql, inputs) {
+    return myDb.prepare(sql).run(inputs);
+  },
+  transaction(fn) {
+    return myDb.transaction(fn);
+  },
 });
 
 // 创建存储空间（会自动创建表和索引）
@@ -84,5 +88,6 @@ const results = await users.find({
 ---
 
 参考资料：
+
 - [SQLite JSON Functions](https://www.sqlite.org/json1.html)
 - [Zod: Schema validation](https://zod.dev/)

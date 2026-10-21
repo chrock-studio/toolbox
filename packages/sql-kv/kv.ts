@@ -75,8 +75,7 @@ export class KV {
    *
    * @param adapter - The SQL adapter
    */
-  constructor(readonly adapter: SQLAdapter) {
-  }
+  constructor(readonly adapter: SQLAdapter) {}
 
   /**
    * Create or open a named store (SQL table).
@@ -93,14 +92,8 @@ export class KV {
    * ```
    */
   async store(name: string): Promise<Store> {
-    await this.adapter.run(
-      `CREATE TABLE IF NOT EXISTS ${name} (__key TEXT PRIMARY KEY, __value TEXT)`,
-      [],
-    );
-    await this.adapter.run(
-      `CREATE INDEX IF NOT EXISTS idx_${name}_collection ON ${name} (__key->>'$[0]')`,
-      [],
-    );
+    await this.adapter.run(`CREATE TABLE IF NOT EXISTS ${name} (__key TEXT PRIMARY KEY, __value TEXT)`, []);
+    await this.adapter.run(`CREATE INDEX IF NOT EXISTS idx_${name}_collection ON ${name} (__key->>'$[0]')`, []);
     return new Store(this.adapter, name);
   }
 }

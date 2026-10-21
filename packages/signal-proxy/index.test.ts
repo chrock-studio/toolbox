@@ -1,9 +1,9 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { describe, expect, test } from "bun:test";
 import { type Delegate, delegate } from "@chrock-studio/shared/delegate";
-import { createSignalProxy, revocableSignalProxy } from "./mod.ts";
+import { createSignalProxy, revocableSignalProxy } from "./index.ts";
 
-Deno.test("createSignalProxy", async (t) => {
-  await t.step("basic getter/setter access", () => {
+describe("createSignalProxy", () => {
+  test("basic getter/setter access", () => {
     interface TestObj {
       __name: string;
       name: Delegate<string>;
@@ -19,14 +19,14 @@ Deno.test("createSignalProxy", async (t) => {
     const proxy = createSignalProxy(obj);
 
     // Access getter
-    assertEquals(proxy.name$, "John");
+    expect(proxy.name$).toBe("John");
 
     // Set value
     proxy.name$ = "Jane";
-    assertEquals(proxy.name$, "Jane");
+    expect(proxy.name$).toBe("Jane");
   });
 
-  await t.step("multiple properties", () => {
+  test("multiple properties", () => {
     interface TestObj {
       __count: number;
       __name: string;
@@ -48,17 +48,17 @@ Deno.test("createSignalProxy", async (t) => {
 
     const proxy = createSignalProxy(obj);
 
-    assertEquals(proxy.count$, 0);
-    assertEquals(proxy.name$, "test");
+    expect(proxy.count$).toBe(0);
+    expect(proxy.name$).toBe("test");
 
     proxy.count$ = 10;
     proxy.name$ = "updated";
 
-    assertEquals(proxy.count$, 10);
-    assertEquals(proxy.name$, "updated");
+    expect(proxy.count$).toBe(10);
+    expect(proxy.name$).toBe("updated");
   });
 
-  await t.step("non-$ property access", () => {
+  test("non-$ property access", () => {
     interface TestObj {
       __name: string;
       regularProperty: string;
@@ -76,10 +76,10 @@ Deno.test("createSignalProxy", async (t) => {
     const proxy = createSignalProxy(obj);
 
     // Regular property access should work normally
-    assertEquals(proxy.regularProperty, "direct");
+    expect(proxy.regularProperty).toBe("direct");
   });
 
-  await t.step("non-$ property set", () => {
+  test("non-$ property set", () => {
     interface TestObj {
       __name: string;
       regularProperty: string;
@@ -97,28 +97,26 @@ Deno.test("createSignalProxy", async (t) => {
     const proxy = createSignalProxy(obj);
 
     proxy.regularProperty = "modified";
-    assertEquals(proxy.regularProperty, "modified");
+    expect(proxy.regularProperty).toBe("modified");
   });
 
-  await t.step("throws on non-function $ property", () => {
+  test("throws on non-function $ property", () => {
     const obj = {
       name$: "not a function",
     };
 
     const proxy = createSignalProxy(obj);
 
-    assertThrows(
-      () => {
-        // Accessing name$$ should try to find name$ as a function
-        // @ts-expect-error Testing runtime error
-        proxy.name$$;
-      },
-      TypeError,
-      "is not a function",
-    );
+    const getter = () => {
+      // Accessing name$$ should try to find name$ as a function
+      // @ts-expect-error Testing runtime error
+      proxy.name$$;
+    };
+    expect(getter).toThrow(TypeError);
+    expect(getter).toThrow("is not a function");
   });
 
-  await t.step("nested object wrapping", () => {
+  test("nested object wrapping", () => {
     interface TestObj {
       __data: { id: number; value: string };
       data: Delegate<{ id: number; value: string }>;
@@ -135,10 +133,10 @@ Deno.test("createSignalProxy", async (t) => {
 
     // Accessing nested object should return a proxy
     const dataProxy = proxy.data$;
-    assertEquals(typeof dataProxy, "object");
+    expect(typeof dataProxy).toBe("object");
   });
 
-  await t.step("primitive return values", () => {
+  test("primitive return values", () => {
     interface TestObj {
       __num: number;
       __str: string;
@@ -151,27 +149,36 @@ Deno.test("createSignalProxy", async (t) => {
       __num: 42,
       __str: "hello",
       __bool: true,
-      num: delegate(() => obj.__num, (val) => void (obj.__num = val)),
-      str: delegate(() => obj.__str, (val) => void (obj.__str = val)),
-      bool: delegate(() => obj.__bool, (val) => void (obj.__bool = val)),
+      num: delegate(
+        () => obj.__num,
+        (val) => void (obj.__num = val),
+      ),
+      str: delegate(
+        () => obj.__str,
+        (val) => void (obj.__str = val),
+      ),
+      bool: delegate(
+        () => obj.__bool,
+        (val) => void (obj.__bool = val),
+      ),
     };
 
     const proxy = createSignalProxy(obj);
 
-    assertEquals(proxy.num$, 42);
-    assertEquals(proxy.str$, "hello");
-    assertEquals(proxy.bool$, true);
+    expect(proxy.num$).toBe(42);
+    expect(proxy.str$).toBe("hello");
+    expect(proxy.bool$).toBe(true);
 
     proxy.num$ = 100;
     proxy.str$ = "world";
     proxy.bool$ = false;
 
-    assertEquals(proxy.num$, 100);
-    assertEquals(proxy.str$, "world");
-    assertEquals(proxy.bool$, false);
+    expect(proxy.num$).toBe(100);
+    expect(proxy.str$).toBe("world");
+    expect(proxy.bool$).toBe(false);
   });
 
-  await t.step("null and undefined values", () => {
+  test("null and undefined values", () => {
     interface TestObj {
       __null: string | null;
       __undefined: string | undefined;
@@ -193,16 +200,16 @@ Deno.test("createSignalProxy", async (t) => {
 
     const proxy = createSignalProxy(obj);
 
-    assertEquals(proxy.nullValue$, null);
-    assertEquals(proxy.undefinedValue$, undefined);
+    expect(proxy.nullValue$).toBe(null);
+    expect(proxy.undefinedValue$).toBe(undefined);
 
     proxy.nullValue$ = "not null";
-    assertEquals(proxy.nullValue$, "not null");
+    expect(proxy.nullValue$).toBe("not null");
   });
 });
 
-Deno.test("revocableSignalProxy", async (t) => {
-  await t.step("basic usage", () => {
+describe("revocableSignalProxy", () => {
+  test("basic usage", () => {
     interface TestObj {
       __count: number;
       count: Delegate<number>;
@@ -218,12 +225,12 @@ Deno.test("revocableSignalProxy", async (t) => {
     const { proxy, revoke } = revocableSignalProxy(obj);
 
     proxy.count$ = 10;
-    assertEquals(proxy.count$, 10);
+    expect(proxy.count$).toBe(10);
 
     revoke();
   });
 
-  await t.step("throws after revoke on get", () => {
+  test("throws after revoke on get", () => {
     interface TestObj {
       __count: number;
       count: Delegate<number>;
@@ -239,19 +246,16 @@ Deno.test("revocableSignalProxy", async (t) => {
     const { proxy, revoke } = revocableSignalProxy(obj);
 
     proxy.count$ = 10;
-    assertEquals(proxy.count$, 10);
+    expect(proxy.count$).toBe(10);
 
     revoke();
 
-    assertThrows(
-      () => {
-        proxy.count$;
-      },
-      TypeError,
-    );
+    expect(() => {
+      proxy.count$;
+    }).toThrow(TypeError);
   });
 
-  await t.step("throws after revoke on set", () => {
+  test("throws after revoke on set", () => {
     interface TestObj {
       __count: number;
       count: Delegate<number>;
@@ -267,19 +271,16 @@ Deno.test("revocableSignalProxy", async (t) => {
     const { proxy, revoke } = revocableSignalProxy(obj);
 
     proxy.count$ = 10;
-    assertEquals(proxy.count$, 10);
+    expect(proxy.count$).toBe(10);
 
     revoke();
 
-    assertThrows(
-      () => {
-        proxy.count$ = 20;
-      },
-      TypeError,
-    );
+    expect(() => {
+      proxy.count$ = 20;
+    }).toThrow(TypeError);
   });
 
-  await t.step("Symbol.dispose on proxy", () => {
+  test("Symbol.dispose on proxy", () => {
     interface TestObj {
       __value: string;
       value: Delegate<string>;
@@ -295,25 +296,22 @@ Deno.test("revocableSignalProxy", async (t) => {
     const { proxy } = revocableSignalProxy(obj);
 
     // Access before dispose
-    assertEquals(proxy.value$, "test");
+    expect(proxy.value$).toBe("test");
 
     // The proxy has Symbol.dispose
     const dispose = (proxy as Disposable)[Symbol.dispose];
-    assertEquals(typeof dispose, "function");
+    expect(typeof dispose).toBe("function");
 
     // Call dispose
     dispose();
 
     // Should throw after dispose
-    assertThrows(
-      () => {
-        proxy.value$;
-      },
-      TypeError,
-    );
+    expect(() => {
+      proxy.value$;
+    }).toThrow(TypeError);
   });
 
-  await t.step("Symbol.asyncDispose on proxy", async () => {
+  test("Symbol.asyncDispose on proxy", async () => {
     interface TestObj {
       __value: string;
       value: Delegate<string>;
@@ -329,25 +327,22 @@ Deno.test("revocableSignalProxy", async (t) => {
     const { proxy } = revocableSignalProxy(obj);
 
     // Access before dispose
-    assertEquals(proxy.value$, "test");
+    expect(proxy.value$).toBe("test");
 
     // The proxy has Symbol.asyncDispose
     const asyncDispose = (proxy as AsyncDisposable)[Symbol.asyncDispose];
-    assertEquals(typeof asyncDispose, "function");
+    expect(typeof asyncDispose).toBe("function");
 
     // Call asyncDispose
     await asyncDispose();
 
     // Should throw after dispose
-    assertThrows(
-      () => {
-        proxy.value$;
-      },
-      TypeError,
-    );
+    expect(() => {
+      proxy.value$;
+    }).toThrow(TypeError);
   });
 
-  await t.step("using statement pattern", () => {
+  test("using statement pattern", () => {
     interface TestObj {
       __value: string;
       value: Delegate<string>;
@@ -362,7 +357,7 @@ Deno.test("revocableSignalProxy", async (t) => {
 
     {
       using proxy = revocableSignalProxy(obj).proxy;
-      assertEquals(proxy.value$, "test");
+      expect(proxy.value$).toBe("test");
       // Proxy should be revoked at end of scope
     }
 
@@ -370,7 +365,7 @@ Deno.test("revocableSignalProxy", async (t) => {
     // Note: We can't easily test this outside the scope
   });
 
-  await t.step("caches proxy for same object", () => {
+  test("caches proxy for same object", () => {
     interface TestObj {
       __value: string;
       value: Delegate<string>;
@@ -387,16 +382,16 @@ Deno.test("revocableSignalProxy", async (t) => {
     const result2 = revocableSignalProxy(obj);
 
     // Should return the same cached proxy
-    assertEquals(result1.proxy, result2.proxy);
+    expect(result1.proxy).toBe(result2.proxy);
   });
 });
 
-Deno.test("createSignalProxy.revocable", async (t) => {
-  await t.step("exposes revocableSignalProxy", () => {
-    assertEquals(createSignalProxy.revocable, revocableSignalProxy);
+describe("createSignalProxy.revocable", () => {
+  test("exposes revocableSignalProxy", () => {
+    expect(createSignalProxy.revocable).toBe(revocableSignalProxy);
   });
 
-  await t.step("can create revocable proxy via property", () => {
+  test("can create revocable proxy via property", () => {
     interface TestObj {
       __count: number;
       count: Delegate<number>;
@@ -412,21 +407,18 @@ Deno.test("createSignalProxy.revocable", async (t) => {
     const { proxy, revoke } = createSignalProxy.revocable(obj);
 
     proxy.count$ = 10;
-    assertEquals(proxy.count$, 10);
+    expect(proxy.count$).toBe(10);
 
     revoke();
 
-    assertThrows(
-      () => {
-        proxy.count$;
-      },
-      TypeError,
-    );
+    expect(() => {
+      proxy.count$;
+    }).toThrow(TypeError);
   });
 });
 
-Deno.test("edge cases", async (t) => {
-  await t.step("symbol properties are ignored", () => {
+describe("edge cases", () => {
+  test("symbol properties are ignored", () => {
     const sym = Symbol("test");
     interface TestObj {
       __value: string;
@@ -445,18 +437,18 @@ Deno.test("edge cases", async (t) => {
     const proxy = createSignalProxy(obj);
 
     // Symbol properties should not be proxied with $
-    assertEquals(proxy.value$, "test");
+    expect(proxy.value$).toBe("test");
   });
 
-  await t.step("empty object", () => {
+  test("empty object", () => {
     const obj = {};
     const proxy = createSignalProxy(obj);
 
     // Should not throw
-    assertEquals(typeof proxy, "object");
+    expect(typeof proxy).toBe("object");
   });
 
-  await t.step("object with only regular properties", () => {
+  test("object with only regular properties", () => {
     const obj = {
       name: "John",
       age: 30,
@@ -464,11 +456,11 @@ Deno.test("edge cases", async (t) => {
 
     const proxy = createSignalProxy(obj);
 
-    assertEquals(proxy.name, "John");
-    assertEquals(proxy.age, 30);
+    expect(proxy.name).toBe("John");
+    expect(proxy.age).toBe(30);
   });
 
-  await t.step("setter with multiple parameters", () => {
+  test("setter with multiple parameters", () => {
     interface TestObj {
       __values: number[];
       add: Delegate<number[]>;
@@ -485,10 +477,11 @@ Deno.test("edge cases", async (t) => {
 
     // Setter with multiple parameters
     proxy.add$ = [1, 2, 3];
-    assertEquals(proxy.add$, [1, 2, 3]);
+    // `proxy.add$` is a proxy-wrapped array; Bun's `toStrictEqual` rejects proxies, so compare structurally.
+    expect(proxy.add$).toEqual([1, 2, 3]);
   });
 
-  await t.step("getter only (no setter)", () => {
+  test("getter only (no setter)", () => {
     let counter = 0;
     const obj = {
       counter: () => ++counter,
@@ -497,12 +490,12 @@ Deno.test("edge cases", async (t) => {
     const proxy = createSignalProxy(obj);
 
     // Each access should call the getter
-    assertEquals(proxy.counter$, 1);
-    assertEquals(proxy.counter$, 2);
-    assertEquals(proxy.counter$, 3);
+    expect(proxy.counter$).toBe(1);
+    expect(proxy.counter$).toBe(2);
+    expect(proxy.counter$).toBe(3);
   });
 
-  await t.step("setter only pattern", () => {
+  test("setter only pattern", () => {
     const logs: string[] = [];
     const obj = {
       log: (_message: string) => {
@@ -513,6 +506,6 @@ Deno.test("edge cases", async (t) => {
     const proxy = createSignalProxy(obj);
 
     proxy.log$ = "test message";
-    assertEquals(logs, ["test message"]);
+    expect(logs).toStrictEqual(["test message"]);
   });
 });

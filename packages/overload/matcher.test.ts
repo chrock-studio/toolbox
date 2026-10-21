@@ -1,143 +1,115 @@
+import { describe, expect, test } from "bun:test";
 import { check } from "./checker.ts";
 import { Matcher } from "./matcher.ts";
-import { assertEquals, assertFalse } from "@std/assert";
 
 const str = check((x): x is string => typeof x === "string");
 const num = check((x): x is number => typeof x === "number");
 const bool = check((x): x is boolean => typeof x === "boolean");
 
-Deno.test("Matcher", async (t) => {
-  await t.step("without Rest Parameters", async (t) => {
-    await t.step("check() returns true for matching input", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+describe("Matcher", () => {
+  describe("without Rest Parameters", () => {
+    test("check() returns true for matching input", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertEquals(matcher.check(["John Doe", 18]), true);
+      expect(matcher.check(["John Doe", 18])).toBe(true);
     });
 
-    await t.step("check() returns false for non-matching input", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+    test("check() returns false for non-matching input", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertFalse(matcher.check(["John Doe", "18"]));
+      expect(matcher.check(["John Doe", "18"])).toBe(false);
     });
 
-    await t.step("call returns expected result", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+    test("call returns expected result", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertEquals(matcher.implement("John Doe", 18), "Name: John Doe, Age: 18");
+      expect(matcher.implement("John Doe", 18)).toBe("Name: John Doe, Age: 18");
     });
 
-    await t.step("check() returns true for extra elements without rest", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+    test("check() returns true for extra elements without rest", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertEquals(matcher.check(["John Doe", 18, true]), true);
+      expect(matcher.check(["John Doe", 18, true])).toBe(true);
     });
   });
 
-  await t.step("with Rest Parameters", async (t) => {
-    await t.step("check() returns true for matching input with rest", () => {
+  describe("with Rest Parameters", () => {
+    test("check() returns true for matching input with rest", () => {
       const matcher = Matcher.make(
         [str, num],
         bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
-      assertEquals(matcher.check(["John Doe", 18, true, false, true]), true);
+      expect(matcher.check(["John Doe", 18, true, false, true])).toBe(true);
     });
 
-    await t.step("check() returns false when rest elements don't match", () => {
+    test("check() returns false when rest elements don't match", () => {
       const matcher = Matcher.make(
         [str, num],
         bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
-      assertFalse(matcher.check(["John Doe", 18, "not a boolean"]));
+      expect(matcher.check(["John Doe", 18, "not a boolean"])).toBe(false);
     });
 
-    await t.step("check() returns true for input without rest elements", () => {
+    test("check() returns true for input without rest elements", () => {
       const matcher = Matcher.make(
         [str, num],
         bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
-      assertEquals(matcher.check(["John Doe", 18]), true);
+      expect(matcher.check(["John Doe", 18])).toBe(true);
     });
 
-    await t.step("call returns expected result with rest elements", () => {
+    test("call returns expected result with rest elements", () => {
       const matcher = Matcher.make(
         [str, num],
         bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
-      assertEquals(
-        matcher.implement("John Doe", 18, true, false, true),
+      expect(matcher.implement("John Doe", 18, true, false, true)).toBe(
         "Name: John Doe, Age: 18, and other: [true, false, true]",
       );
     });
 
-    await t.step("call returns expected result without rest elements", () => {
+    test("call returns expected result without rest elements", () => {
       const matcher = Matcher.make(
         [str, num],
         bool,
         (name, age, ...other) => `Name: ${name}, Age: ${age}, and other: [${other.join(", ")}]`,
       );
 
-      assertEquals(
-        matcher.implement("John Doe", 18),
-        "Name: John Doe, Age: 18, and other: []",
-      );
+      expect(matcher.implement("John Doe", 18)).toBe("Name: John Doe, Age: 18, and other: []");
     });
   });
 
-  await t.step("edge cases", async (t) => {
-    await t.step("empty checkers array", () => {
-      const matcher = Matcher.make(
-        [] as [],
-        () => "no checkers",
-      );
+  describe("edge cases", () => {
+    test("empty checkers array", () => {
+      const matcher = Matcher.make([] as [], () => "no checkers");
 
-      assertEquals(matcher.check([]), true);
+      expect(matcher.check([])).toBe(true);
     });
 
-    await t.step("single checker", () => {
-      const matcher = Matcher.make(
-        [str],
-        (str) => `Got: ${str}`,
-      );
+    test("single checker", () => {
+      const matcher = Matcher.make([str], (str) => `Got: ${str}`);
 
-      assertEquals(matcher.check(["hello"]), true);
+      expect(matcher.check(["hello"])).toBe(true);
     });
 
-    await t.step("check() returns false for insufficient elements", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+    test("check() returns false for insufficient elements", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertFalse(matcher.check(["John Doe"]));
+      expect(matcher.check(["John Doe"])).toBe(false);
     });
 
-    await t.step("check() returns false for empty input", () => {
-      const matcher = Matcher.make(
-        [str, num],
-        (name, age) => `Name: ${name}, Age: ${age}`,
-      );
+    test("check() returns false for empty input", () => {
+      const matcher = Matcher.make([str, num], (name, age) => `Name: ${name}, Age: ${age}`);
 
-      assertFalse(matcher.check([]));
+      expect(matcher.check([])).toBe(false);
     });
   });
 });

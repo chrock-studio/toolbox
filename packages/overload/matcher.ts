@@ -103,11 +103,7 @@ export class Matcher<Implement extends (...args: any[]) => any = (...args: any[]
   /** The implementation function called when input passes all checks. */
   implement: Implement;
 
-  private constructor(
-    checkers: StandardSchemaV1[],
-    rest: StandardSchemaV1 | undefined,
-    implement: Implement,
-  ) {
+  private constructor(checkers: StandardSchemaV1[], rest: StandardSchemaV1 | undefined, implement: Implement) {
     this.checkers = checkers.map((checker) => (data: unknown) => checker["~standard"].validate(data));
     this.rest = rest ? (data: unknown) => rest["~standard"].validate(data) : undefined;
     this.implement = implement;
@@ -151,7 +147,9 @@ export class Matcher<Implement extends (...args: any[]) => any = (...args: any[]
    * @returns A new `Matcher` instance.
    */
   static make = ((...args: any[]) => {
-    let checkers, rest: any = void 0, implement;
+    let checkers,
+      rest: any = void 0,
+      implement;
     if (args.length === 2) {
       [checkers, implement] = args;
     } else if (args.length >= 3) {
@@ -177,6 +175,9 @@ export class Matcher<Implement extends (...args: any[]) => any = (...args: any[]
       R,
       P extends InferProps<C>,
       I extends (...args: [...P]) => R = (...args: [...P]) => R,
-    >(checkers: C, implement: I): Matcher<typeof implement>;
+    >(
+      checkers: C,
+      implement: I,
+    ): Matcher<typeof implement>;
   };
 }

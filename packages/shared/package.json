@@ -1,0 +1,11 @@
+{
+  "name": "@chrock-studio/shared",
+  "version": "0.2.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts",
+    "./delegate": "./delegate.ts"
+  }
+}

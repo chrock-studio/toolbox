@@ -7,9 +7,9 @@
  * @module
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { isRaw, KV, raw, sql } from "./mod.ts";
+import { isRaw, KV, raw, sql } from "./index.ts";
 import type { SQLAdapter } from "./types.ts";
 import { and, between, eq, gt, gte, isIn, isNotNull, isNull, like, lt, lte, neq, notIn, or, regexp } from "./filter.ts";
 import { DatabaseSync, type SQLInputValue, type StatementSync } from "node:sqlite";
@@ -79,39 +79,39 @@ class SQLiteAdapter implements SQLAdapter {
 // sql.ts – raw() / isRaw() / sql tagged template
 // =========================================================================
 
-Deno.test("sql.ts – raw() / isRaw() / sql tagged template", async (t) => {
-  await t.step("raw() creates a RawSQL marker", () => {
+describe("sql.ts – raw() / isRaw() / sql tagged template", () => {
+  test("raw() creates a RawSQL marker", () => {
     const r = raw("__value->'$.name'");
-    assertEquals(r._raw, true);
-    assertEquals(r.sql, "__value->'$.name'");
-    assertEquals(Object.isFrozen(r), true);
+    expect(r._raw).toBe(true);
+    expect(r.sql).toBe("__value->'$.name'");
+    expect(Object.isFrozen(r)).toBe(true);
   });
 
-  await t.step("isRaw() detects RawSQL markers", () => {
-    assertEquals(isRaw(raw("test")), true);
-    assertEquals(isRaw("string"), false);
-    assertEquals(isRaw(42), false);
-    assertEquals(isRaw(null), false);
-    assertEquals(isRaw(undefined), false);
-    assertEquals(isRaw({ _raw: false }), false);
+  test("isRaw() detects RawSQL markers", () => {
+    expect(isRaw(raw("test"))).toBe(true);
+    expect(isRaw("string")).toBe(false);
+    expect(isRaw(42)).toBe(false);
+    expect(isRaw(null)).toBe(false);
+    expect(isRaw(undefined)).toBe(false);
+    expect(isRaw({ _raw: false })).toBe(false);
   });
 
-  await t.step("sql tagged template parameterizes normal values", () => {
+  test("sql tagged template parameterizes normal values", () => {
     const { text, params } = sql`SELECT * FROM kv WHERE name = ${"John"} AND age = ${30}`;
-    assertEquals(text, "SELECT * FROM kv WHERE name = ? AND age = ?");
-    assertEquals(params, ["John", 30]);
+    expect(text).toBe("SELECT * FROM kv WHERE name = ? AND age = ?");
+    expect(params).toStrictEqual(["John", 30]);
   });
 
-  await t.step("sql tagged template inline raw values", () => {
+  test("sql tagged template inline raw values", () => {
     const { text, params } = sql`SELECT ${raw("__value->'$.name'")} AS name FROM ${raw("kv")} WHERE age = ${30}`;
-    assertEquals(text, "SELECT __value->'$.name' AS name FROM kv WHERE age = ?");
-    assertEquals(params, [30]);
+    expect(text).toBe("SELECT __value->'$.name' AS name FROM kv WHERE age = ?");
+    expect(params).toStrictEqual([30]);
   });
 
-  await t.step("sql tagged template handles no values", () => {
+  test("sql tagged template handles no values", () => {
     const { text, params } = sql`SELECT * FROM kv LIMIT 10`;
-    assertEquals(text, "SELECT * FROM kv LIMIT 10");
-    assertEquals(params, []);
+    expect(text).toBe("SELECT * FROM kv LIMIT 10");
+    expect(params).toStrictEqual([]);
   });
 });
 
@@ -119,106 +119,106 @@ Deno.test("sql.ts – raw() / isRaw() / sql tagged template", async (t) => {
 // filter.ts – Filter operators
 // =========================================================================
 
-Deno.test("filter.ts – Filter operators", async (t) => {
-  await t.step("eq filter generates correct SQL", () => {
+describe("filter.ts – Filter operators", () => {
+  test("eq filter generates correct SQL", () => {
     const { where, params } = eq("John").toSQL("__value->'$.name'");
-    assertEquals(where, "__value->'$.name' == ?");
-    assertEquals(params, ["John"]);
+    expect(where).toBe("__value->'$.name' == ?");
+    expect(params).toStrictEqual(["John"]);
   });
 
-  await t.step("neq filter generates correct SQL", () => {
+  test("neq filter generates correct SQL", () => {
     const { where, params } = neq(42).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' != ?");
-    assertEquals(params, [42]);
+    expect(where).toBe("__value->'$.age' != ?");
+    expect(params).toStrictEqual([42]);
   });
 
-  await t.step("lt filter generates correct SQL", () => {
+  test("lt filter generates correct SQL", () => {
     const { where, params } = lt(20).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' < ?");
-    assertEquals(params, [20]);
+    expect(where).toBe("__value->'$.age' < ?");
+    expect(params).toStrictEqual([20]);
   });
 
-  await t.step("lte filter generates correct SQL", () => {
+  test("lte filter generates correct SQL", () => {
     const { where, params } = lte(20).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' <= ?");
-    assertEquals(params, [20]);
+    expect(where).toBe("__value->'$.age' <= ?");
+    expect(params).toStrictEqual([20]);
   });
 
-  await t.step("gt filter generates correct SQL", () => {
+  test("gt filter generates correct SQL", () => {
     const { where, params } = gt(18).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' > ?");
-    assertEquals(params, [18]);
+    expect(where).toBe("__value->'$.age' > ?");
+    expect(params).toStrictEqual([18]);
   });
 
-  await t.step("gte filter generates correct SQL", () => {
+  test("gte filter generates correct SQL", () => {
     const { where, params } = gte(18).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' >= ?");
-    assertEquals(params, [18]);
+    expect(where).toBe("__value->'$.age' >= ?");
+    expect(params).toStrictEqual([18]);
   });
 
-  await t.step("regexp filter generates correct SQL", () => {
+  test("regexp filter generates correct SQL", () => {
     const { where, params } = regexp("[^@]+@.+\\..+").toSQL("__value->'$.mail'");
-    assertEquals(where, "__value->'$.mail' REGEXP ?");
-    assertEquals(params, ["[^@]+@.+\\..+"]);
+    expect(where).toBe("__value->'$.mail' REGEXP ?");
+    expect(params).toStrictEqual(["[^@]+@.+\\..+"]);
   });
 
-  await t.step("isIn filter generates correct SQL", () => {
+  test("isIn filter generates correct SQL", () => {
     const { where, params } = isIn(["New York", "Washington"]).toSQL("__value->'$.address.city'");
-    assertEquals(where, "__value->'$.address.city' IN (?, ?)");
-    assertEquals(params, ["New York", "Washington"]);
+    expect(where).toBe("__value->'$.address.city' IN (?, ?)");
+    expect(params).toStrictEqual(["New York", "Washington"]);
   });
 
-  await t.step("notIn filter generates correct SQL", () => {
+  test("notIn filter generates correct SQL", () => {
     const { where, params } = notIn(["a", "b"]).toSQL("__value->'$.x'");
-    assertEquals(where, "__value->'$.x' NOT IN (?, ?)");
-    assertEquals(params, ["a", "b"]);
+    expect(where).toBe("__value->'$.x' NOT IN (?, ?)");
+    expect(params).toStrictEqual(["a", "b"]);
   });
 
-  await t.step("between filter generates correct SQL", () => {
+  test("between filter generates correct SQL", () => {
     const { where, params } = between(18, 65).toSQL("__value->'$.age'");
-    assertEquals(where, "__value->'$.age' BETWEEN ? AND ?");
-    assertEquals(params, [18, 65]);
+    expect(where).toBe("__value->'$.age' BETWEEN ? AND ?");
+    expect(params).toStrictEqual([18, 65]);
   });
 
-  await t.step("like filter generates correct SQL", () => {
+  test("like filter generates correct SQL", () => {
     const { where, params } = like("John%").toSQL("__value->'$.name'");
-    assertEquals(where, "__value->'$.name' LIKE ?");
-    assertEquals(params, ["John%"]);
+    expect(where).toBe("__value->'$.name' LIKE ?");
+    expect(params).toStrictEqual(["John%"]);
   });
 
-  await t.step("or filter combines filters with OR", () => {
+  test("or filter combines filters with OR", () => {
     const { where, params } = or(eq("New York"), eq("Washington")).toSQL("__value->'$.city'");
-    assertEquals(where, "(__value->'$.city' == ? OR __value->'$.city' == ?)");
-    assertEquals(params, ["New York", "Washington"]);
+    expect(where).toBe("(__value->'$.city' == ? OR __value->'$.city' == ?)");
+    expect(params).toStrictEqual(["New York", "Washington"]);
   });
 
-  await t.step("and filter combines filters with AND", () => {
+  test("and filter combines filters with AND", () => {
     const { where, params } = and(gt(18), lt(65)).toSQL("__value->'$.age'");
-    assertEquals(where, "(__value->'$.age' > ? AND __value->'$.age' < ?)");
-    assertEquals(params, [18, 65]);
+    expect(where).toBe("(__value->'$.age' > ? AND __value->'$.age' < ?)");
+    expect(params).toStrictEqual([18, 65]);
   });
 
-  await t.step("or with single filter wraps in parentheses", () => {
+  test("or with single filter wraps in parentheses", () => {
     const { where } = or(eq("x")).toSQL("__value->'$.f'");
-    assertEquals(where, "(__value->'$.f' == ?)");
+    expect(where).toBe("(__value->'$.f' == ?)");
   });
 
-  await t.step("or with no filters returns TRUE", () => {
+  test("or with no filters returns TRUE", () => {
     const { where, params } = or().toSQL("__value->'$.f'");
-    assertEquals(where, "TRUE");
-    assertEquals(params, []);
+    expect(where).toBe("TRUE");
+    expect(params).toStrictEqual([]);
   });
 
-  await t.step("isNull filter generates correct SQL", () => {
+  test("isNull filter generates correct SQL", () => {
     const { where, params } = isNull().toSQL("__value->'$.deleted_at'");
-    assertEquals(where, "__value->'$.deleted_at' IS NULL");
-    assertEquals(params, []);
+    expect(where).toBe("__value->'$.deleted_at' IS NULL");
+    expect(params).toStrictEqual([]);
   });
 
-  await t.step("isNotNull filter generates correct SQL", () => {
+  test("isNotNull filter generates correct SQL", () => {
     const { where, params } = isNotNull().toSQL("__value->'$.deleted_at'");
-    assertEquals(where, "__value->'$.deleted_at' IS NOT NULL");
-    assertEquals(params, []);
+    expect(where).toBe("__value->'$.deleted_at' IS NOT NULL");
+    expect(params).toStrictEqual([]);
   });
 });
 
@@ -229,41 +229,42 @@ Deno.test("filter.ts – Filter operators", async (t) => {
 const adapter = new SQLiteAdapter();
 const kvdb = new KV(adapter);
 
-Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t) => {
-  await t.step("new KV() creates a KV instance", () => {
-    assertExists(kvdb);
-    assertEquals(kvdb.adapter, adapter);
+describe("KV / Store / Collection – Real SQLite integration tests", () => {
+  test("new KV() creates a KV instance", () => {
+    expect(kvdb).not.toBeNull();
+    expect(kvdb).not.toBeUndefined();
+    expect(kvdb.adapter).toBe(adapter);
   });
 
-  await t.step("KV.store() creates table and index", async () => {
+  test("KV.store() creates table and index", async () => {
     await kvdb.store("kv");
     // Verify table was created
-    const tables = adapter.db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='kv'")
-      .all() as { name: string }[];
-    assertEquals(tables.length, 1);
-    assertEquals(tables[0].name, "kv");
+    const tables = adapter.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='kv'").all() as {
+      name: string;
+    }[];
+    expect(tables.length).toBe(1);
+    expect(tables[0].name).toBe("kv");
 
     // Verify index was created
     const indexes = adapter.db
       .prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_kv_collection'")
       .all() as { name: string }[];
-    assertEquals(indexes.length, 1);
-    assertEquals(indexes[0].name, "idx_kv_collection");
+    expect(indexes.length).toBe(1);
+    expect(indexes[0].name).toBe("idx_kv_collection");
   });
 
-  await t.step("KV provides filter operators as instance methods", () => {
-    assertEquals(typeof kvdb.eq, "function");
-    assertEquals(typeof kvdb.lt, "function");
-    assertEquals(typeof kvdb.gt, "function");
-    assertEquals(typeof kvdb.regexp, "function");
-    assertEquals(typeof kvdb.or, "function");
-    assertEquals(typeof kvdb.and, "function");
-    assertEquals(typeof kvdb.isIn, "function");
-    assertEquals(typeof kvdb["in"], "function");
+  test("KV provides filter operators as instance methods", () => {
+    expect(typeof kvdb.eq).toBe("function");
+    expect(typeof kvdb.lt).toBe("function");
+    expect(typeof kvdb.gt).toBe("function");
+    expect(typeof kvdb.regexp).toBe("function");
+    expect(typeof kvdb.or).toBe("function");
+    expect(typeof kvdb.and).toBe("function");
+    expect(typeof kvdb.isIn).toBe("function");
+    expect(typeof kvdb["in"]).toBe("function");
   });
 
-  await t.step("Collection.set() stores validated value", async () => {
+  test("Collection.set() stores validated value", async () => {
     const kv = await kvdb.store("kv");
     const users = kv.collection({
       name: "users",
@@ -273,15 +274,13 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("user1", { id: "user1", name: "Alice" });
 
     // Verify data was stored correctly
-    const rows = adapter.db
-      .prepare("SELECT __key, __value FROM kv")
-      .all() as { __key: string; __value: string }[];
-    assertEquals(rows.length, 1);
-    assertEquals(rows[0].__key, JSON.stringify(["users", "user1"]));
-    assertEquals(JSON.parse(rows[0].__value), { id: "user1", name: "Alice" });
+    const rows = adapter.db.prepare("SELECT __key, __value FROM kv").all() as { __key: string; __value: string }[];
+    expect(rows.length).toBe(1);
+    expect(rows[0].__key).toBe(JSON.stringify(["users", "user1"]));
+    expect(JSON.parse(rows[0].__value)).toStrictEqual({ id: "user1", name: "Alice" });
   });
 
-  await t.step("Collection.get() queries by key", async () => {
+  test("Collection.get() queries by key", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -291,11 +290,12 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("user1", { id: "user1", name: "Alice" });
     const user = await users.get("user1");
 
-    assertExists(user);
-    assertEquals(user.name, "Alice");
+    expect(user).not.toBeNull();
+    expect(user).not.toBeUndefined();
+    expect(user!.name).toBe("Alice");
   });
 
-  await t.step("Collection.get() returns null for missing key", async () => {
+  test("Collection.get() returns null for missing key", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -303,10 +303,10 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     });
 
     const user = await users.get("nonexistent");
-    assertEquals(user, null);
+    expect(user).toBe(null);
   });
 
-  await t.step("Collection.getMany() queries multiple keys", async () => {
+  test("Collection.getMany() queries multiple keys", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -317,12 +317,12 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u2", { id: "u2", name: "Bob" });
     const items = await users.getMany(["u1", "u2"]);
 
-    assertEquals(items.length, 2);
-    assertEquals(items[0].name, "Alice");
-    assertEquals(items[1].name, "Bob");
+    expect(items.length).toBe(2);
+    expect(items[0].name).toBe("Alice");
+    expect(items[1].name).toBe("Bob");
   });
 
-  await t.step("Collection.list() queries by collection prefix", async () => {
+  test("Collection.list() queries by collection prefix", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -333,12 +333,12 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u2", { id: "u2", name: "Bob" });
     const items = await users.list();
 
-    assertEquals(items.length, 2);
-    assertEquals(items[0].name, "Alice");
-    assertEquals(items[1].name, "Bob");
+    expect(items.length).toBe(2);
+    expect(items[0].name).toBe("Alice");
+    expect(items[1].name).toBe("Bob");
   });
 
-  await t.step("Collection.list() scoped to collection", async () => {
+  test("Collection.list() scoped to collection", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -354,11 +354,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
 
     const userList = await users.list();
     const postList = await posts.list();
-    assertEquals(userList.length, 1);
-    assertEquals(postList.length, 1);
+    expect(userList.length).toBe(1);
+    expect(postList.length).toBe(1);
   });
 
-  await t.step("Collection.find() builds filter conditions", async () => {
+  test("Collection.find() builds filter conditions", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -373,11 +373,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       age: lt(30),
     });
 
-    assertEquals(items.length, 1);
-    assertEquals(items[0].name, "Alice");
+    expect(items.length).toBe(1);
+    expect(items[0].name).toBe("Alice");
   });
 
-  await t.step("Collection.find() with dot-notation fields", async () => {
+  test("Collection.find() with dot-notation fields", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -391,11 +391,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u2", { id: "u2", address: { city: "Washington" } });
 
     const items = await users.find({ "address.city": eq("New York") });
-    assertEquals(items.length, 1);
-    assertEquals(items[0].id, "u1");
+    expect(items.length).toBe(1);
+    expect(items[0].id).toBe("u1");
   });
 
-  await t.step("Collection.find() with or filter", async () => {
+  test("Collection.find() with or filter", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -412,10 +412,10 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       city: kvdb.or(kvdb.eq("New York"), kvdb.eq("Washington")),
     });
 
-    assertEquals(items.length, 2);
+    expect(items.length).toBe(2);
   });
 
-  await t.step("Collection.deleteMany() deletes by keys", async () => {
+  test("Collection.deleteMany() deletes by keys", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -429,11 +429,11 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.deleteMany(["u1"]);
 
     const remaining = await users.list();
-    assertEquals(remaining.length, 1);
-    assertEquals(remaining[0].name, "Bob");
+    expect(remaining.length).toBe(1);
+    expect(remaining[0].name).toBe("Bob");
   });
 
-  await t.step("Collection.deleteMany() skips empty array", async () => {
+  test("Collection.deleteMany() skips empty array", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -444,7 +444,7 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.deleteMany([]);
   });
 
-  await t.step("EXPLAIN QUERY PLAN shows index usage for collection queries", async () => {
+  test("EXPLAIN QUERY PLAN shows index usage for collection queries", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -461,28 +461,26 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     // Run EXPLAIN QUERY PLAN on the same query that Collection.list() uses
     const tableName = kv.tableName;
     const plan = adapter.db
-      .prepare(
-        `EXPLAIN QUERY PLAN SELECT __value AS value FROM ${tableName} WHERE __key->>'$[0]' == ?`,
-      )
+      .prepare(`EXPLAIN QUERY PLAN SELECT __value AS value FROM ${tableName} WHERE __key->>'$[0]' == ?`)
       .all("users") as { selectid: number; order: number; from: number; detail: string }[];
 
     // The plan detail should indicate an index lookup (SEARCH or USING INDEX)
     const planDetails = plan.map((r) => r.detail).join(" | ");
     const usesIndex = planDetails.includes("USING INDEX") || planDetails.includes("SEARCH");
-    assertEquals(usesIndex, true, `Expected index usage, got plan: ${planDetails}`);
+    expect(usesIndex, `Expected index usage, got plan: ${planDetails}`).toBe(true);
   });
 
-  await t.step("Collection.extract() returns RawSQL for field path", async () => {
+  test("Collection.extract() returns RawSQL for field path", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
       schema: z.object({ id: z.string(), name: z.string() }),
     });
     const rawRef = users.extract("name");
-    assertEquals(rawRef.sql, "__value->>'$.name'");
+    expect(rawRef.sql).toBe("__value->>'$.name'");
   });
 
-  await t.step("Collection.sql tagged template queries", async () => {
+  test("Collection.sql tagged template queries", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -491,18 +489,18 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
 
     await users.set("u1", { id: "u1", name: "Alice" });
 
-    const rows = await users.sql`SELECT ${
-      users.extract("name")
-    } AS name FROM ${users.table} WHERE __value->'$.mail' LIKE ${"%@example.com"}`;
+    const rows = await users.sql`SELECT ${users.extract(
+      "name",
+    )} AS name FROM ${users.table} WHERE __value->'$.mail' LIKE ${"%@example.com"}`;
 
-    assertEquals(rows.length, 0);
+    expect(rows.length).toBe(0);
   });
 
   // =======================================================================
   // Pagination tests
   // =======================================================================
 
-  await t.step("Collection.list() with limit returns at most N items", async () => {
+  test("Collection.list() with limit returns at most N items", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -512,10 +510,10 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.setMany(Array.from({ length: 10 }, (_, i) => [`u${i}`, { id: `u${i}`, name: `User${i}` }] as const));
 
     const limited = await users.list({ limit: 3 });
-    assertEquals(limited.length, 3);
+    expect(limited.length).toBe(3);
   });
 
-  await t.step("Collection.list() with offset skips items", async () => {
+  test("Collection.list() with offset skips items", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -527,15 +525,15 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     }
 
     const all = await users.list({ orderBy: { field: "id" } });
-    assertEquals(all.length, 10);
-    assertEquals(all[0].id, "u0");
+    expect(all.length).toBe(10);
+    expect(all[0].id).toBe("u0");
 
     const offset = await users.list({ orderBy: { field: "id" }, offset: 5 });
-    assertEquals(offset.length, 5);
-    assertEquals(offset[0].id, "u5");
+    expect(offset.length).toBe(5);
+    expect(offset[0].id).toBe("u5");
   });
 
-  await t.step("Collection.list() with limit + offset paginates correctly", async () => {
+  test("Collection.list() with limit + offset paginates correctly", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -549,26 +547,26 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
 
     // Page 1: first 5 items
     const page1 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 0 });
-    assertEquals(page1.length, 5);
-    assertEquals(page1[0].id, "u0");
-    assertEquals(page1[4].id, "u4");
+    expect(page1.length).toBe(5);
+    expect(page1[0].id).toBe("u0");
+    expect(page1[4].id).toBe("u4");
 
     // Page 2: next 5 items
     const page2 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 5 });
-    assertEquals(page2.length, 5);
-    assertEquals(page2[0].id, "u5");
-    assertEquals(page2[4].id, "u9");
+    expect(page2.length).toBe(5);
+    expect(page2[0].id).toBe("u5");
+    expect(page2[4].id).toBe("u9");
 
     // Page 5 (last): items 20-24 but only 10 exist
     const page5 = await users.list({ orderBy: { field: "id" }, limit: 5, offset: 20 });
-    assertEquals(page5.length, 0);
+    expect(page5.length).toBe(0);
   });
 
   // =======================================================================
   // Sorting tests
   // =======================================================================
 
-  await t.step("Collection.list() with single-field ascending sort", async () => {
+  test("Collection.list() with single-field ascending sort", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -580,13 +578,13 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u3", { id: "u3", name: "Bob" });
 
     const sorted = await users.list({ orderBy: { field: "name", direction: "asc" } });
-    assertEquals(sorted.length, 3);
-    assertEquals(sorted[0].name, "Alice");
-    assertEquals(sorted[1].name, "Bob");
-    assertEquals(sorted[2].name, "Charlie");
+    expect(sorted.length).toBe(3);
+    expect(sorted[0].name).toBe("Alice");
+    expect(sorted[1].name).toBe("Bob");
+    expect(sorted[2].name).toBe("Charlie");
   });
 
-  await t.step("Collection.list() with descending sort", async () => {
+  test("Collection.list() with descending sort", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -598,13 +596,13 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u3", { id: "u3", name: "Charlie" });
 
     const sorted = await users.list({ orderBy: { field: "name", direction: "desc" } });
-    assertEquals(sorted.length, 3);
-    assertEquals(sorted[0].name, "Charlie");
-    assertEquals(sorted[1].name, "Bob");
-    assertEquals(sorted[2].name, "Alice");
+    expect(sorted.length).toBe(3);
+    expect(sorted[0].name).toBe("Charlie");
+    expect(sorted[1].name).toBe("Bob");
+    expect(sorted[2].name).toBe("Alice");
   });
 
-  await t.step("Collection.list() with multi-field sort", async () => {
+  test("Collection.list() with multi-field sort", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -623,15 +621,15 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       ],
     });
 
-    assertEquals(sorted.length, 3);
-    assertEquals(sorted[0].name, "Alice");
-    assertEquals(sorted[0].age, 30);
-    assertEquals(sorted[1].name, "Alice");
-    assertEquals(sorted[1].age, 20);
-    assertEquals(sorted[2].name, "Bob");
+    expect(sorted.length).toBe(3);
+    expect(sorted[0].name).toBe("Alice");
+    expect(sorted[0].age).toBe(30);
+    expect(sorted[1].name).toBe("Alice");
+    expect(sorted[1].age).toBe(20);
+    expect(sorted[2].name).toBe("Bob");
   });
 
-  await t.step("Collection.list() with sort defaults to ascending", async () => {
+  test("Collection.list() with sort defaults to ascending", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -643,12 +641,12 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u3", { id: "u3", name: "Bob" });
 
     const sorted = await users.list({ orderBy: { field: "name" } });
-    assertEquals(sorted[0].name, "Alice");
-    assertEquals(sorted[1].name, "Bob");
-    assertEquals(sorted[2].name, "Charlie");
+    expect(sorted[0].name).toBe("Alice");
+    expect(sorted[1].name).toBe("Bob");
+    expect(sorted[2].name).toBe("Charlie");
   });
 
-  await t.step("Collection.find() with pagination", async () => {
+  test("Collection.find() with pagination", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -659,18 +657,15 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       await users.set(`u${i}`, { id: `u${i}`, name: `User${i}`, age: 20 + i });
     }
 
-    const results = await users.find(
-      { age: gte(22) },
-      { orderBy: { field: "age" }, limit: 3, offset: 1 },
-    );
+    const results = await users.find({ age: gte(22) }, { orderBy: { field: "age" }, limit: 3, offset: 1 });
 
-    assertEquals(results.length, 3);
-    assertEquals(results[0].age, 23);
-    assertEquals(results[1].age, 24);
-    assertEquals(results[2].age, 25);
+    expect(results.length).toBe(3);
+    expect(results[0].age).toBe(23);
+    expect(results[1].age).toBe(24);
+    expect(results[2].age).toBe(25);
   });
 
-  await t.step("Collection.find() with sorting", async () => {
+  test("Collection.find() with sorting", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -681,18 +676,15 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
     await users.set("u2", { id: "u2", name: "Alice", age: 25 });
     await users.set("u3", { id: "u3", name: "Bob", age: 30 });
 
-    const results = await users.find(
-      { age: gte(20) },
-      { orderBy: { field: "name", direction: "desc" } },
-    );
+    const results = await users.find({ age: gte(20) }, { orderBy: { field: "name", direction: "desc" } });
 
-    assertEquals(results.length, 3);
-    assertEquals(results[0].name, "Charlie");
-    assertEquals(results[1].name, "Bob");
-    assertEquals(results[2].name, "Alice");
+    expect(results.length).toBe(3);
+    expect(results[0].name).toBe("Charlie");
+    expect(results[1].name).toBe("Bob");
+    expect(results[2].name).toBe("Alice");
   });
 
-  await t.step("Collection.list() with sort + limit + offset combined", async () => {
+  test("Collection.list() with sort + limit + offset combined", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
     const users = kv.collection({
       name: "users",
@@ -710,12 +702,12 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
       offset: 2,
     });
 
-    assertEquals(result.length, 3);
+    expect(result.length).toBe(3);
     // ids descending: u9, u8, u7, u6, u5, ...
     // skip 2 (u9, u8) → u7, u6, u5
-    assertEquals(result[0].id, "u7");
-    assertEquals(result[1].id, "u6");
-    assertEquals(result[2].id, "u5");
+    expect(result[0].id).toBe("u7");
+    expect(result[1].id).toBe("u6");
+    expect(result[2].id).toBe("u5");
   });
 });
 
@@ -723,8 +715,8 @@ Deno.test("KV / Store / Collection – Real SQLite integration tests", async (t)
 // Integration-style test with full CRUD flow (real SQLite)
 // =========================================================================
 
-Deno.test("Integration-style test with full CRUD flow (real SQLite)", async (t) => {
-  await t.step("full CRUD flow with SQLite", async () => {
+describe("Integration-style test with full CRUD flow (real SQLite)", () => {
+  test("full CRUD flow with SQLite", async () => {
     const kv = await kvdb.store(`kv_${nanoid()}`);
 
     const UserSchema = z.object({
@@ -736,33 +728,35 @@ Deno.test("Integration-style test with full CRUD flow (real SQLite)", async (t) 
 
     // Create
     const [saved] = await users.set("user1", { id: "user1", name: "Alice", age: 25 });
-    assertEquals(saved.name, "Alice");
+    expect(saved.name).toBe("Alice");
 
     // Read
     const found = await users.get("user1");
-    assertExists(found);
-    assertEquals(found.name, "Alice");
-    assertEquals(found.age, 25);
+    expect(found).not.toBeNull();
+    expect(found).not.toBeUndefined();
+    expect(found!.name).toBe("Alice");
+    expect(found!.age).toBe(25);
 
     // Update
     await users.set("user1", { id: "user1", name: "Alice Updated" });
     const updated = await users.get("user1");
-    assertExists(updated);
-    assertEquals(updated.name, "Alice Updated");
+    expect(updated).not.toBeNull();
+    expect(updated).not.toBeUndefined();
+    expect(updated!.name).toBe("Alice Updated");
 
     // Get missing
     const missing = await users.get("nonexistent");
-    assertEquals(missing, null);
+    expect(missing).toBe(null);
 
     // List
     await users.set("user2", { id: "user2", name: "Bob" });
     const all = await users.list();
-    assertEquals(all.length, 2);
+    expect(all.length).toBe(2);
 
     // Delete
     await users.deleteMany(["user1"]);
     const afterDelete = await users.list();
-    assertEquals(afterDelete.length, 1);
-    assertEquals(afterDelete[0].name, "Bob");
+    expect(afterDelete.length).toBe(1);
+    expect(afterDelete[0].name).toBe("Bob");
   });
 });

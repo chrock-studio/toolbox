@@ -1,0 +1,14 @@
+{
+  "name": "@chrock-studio/zod-utils",
+  "version": "0.2.2",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./apply": "./apply/index.ts"
+  },
+  "dependencies": {
+    "hkt-core": "^1.3.5",
+    "zod": "^4.3.6"
+  }
+}

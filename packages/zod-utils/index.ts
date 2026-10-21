@@ -27,4 +27,4 @@
  * console.log(user.info()); // -> "John Doe" (18)
  * ```
  */
-export * from "./apply/mod.ts";
+export * from "./apply/index.ts";

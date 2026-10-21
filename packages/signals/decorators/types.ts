@@ -18,10 +18,7 @@
  * @param context - Metadata about the getter being decorated
  * @returns Either a modified getter function or void (if modifying in place)
  */
-export type ClassGetterDecorator = <
-  This extends object,
-  Value = unknown,
->(
+export type ClassGetterDecorator = <This extends object, Value = unknown>(
   target: (this: This) => Value,
   context: ClassGetterDecoratorContext<This, Value>,
 ) => ((this: This) => Value) | void;
@@ -39,10 +36,7 @@ export type ClassGetterDecorator = <
  * @param context - Metadata about the setter being decorated
  * @returns Either a modified setter function or void (if modifying in place)
  */
-export type ClassSetterDecorator = <
-  This extends object,
-  Value = unknown,
->(
+export type ClassSetterDecorator = <This extends object, Value = unknown>(
   target: (this: This, value: Value) => void,
   context: ClassSetterDecoratorContext<This, Value>,
 ) => ((this: This, value: Value) => void) | void;
@@ -61,10 +55,7 @@ export type ClassSetterDecorator = <
  * @param context - Metadata about the accessor being decorated
  * @returns A result object that can replace the original accessor behavior
  */
-export type ClassAccessorDecorator = <
-  This extends object,
-  Value = unknown,
->(
+export type ClassAccessorDecorator = <This extends object, Value = unknown>(
   target: ClassAccessorDecoratorTarget<This, Value>,
   context: ClassAccessorDecoratorContext<This, Value>,
 ) => ClassAccessorDecoratorResult<This, Value>;
@@ -82,10 +73,7 @@ export type ClassAccessorDecorator = <
  * @param context - Metadata about the method being decorated
  * @returns Either a modified method function or void (if modifying in place)
  */
-export type ClassMethodDecorator = <
-  This extends object,
-  Value extends (this: This, ...args: any[]) => any,
->(
+export type ClassMethodDecorator = <This extends object, Value extends (this: This, ...args: any[]) => any>(
   target: Value,
   context: ClassMethodDecoratorContext<This, Value>,
 ) => Value | void;
@@ -102,9 +90,7 @@ export type ClassMethodDecorator = <
  * @param context - Metadata about the class being decorated
  * @returns Either a modified class constructor or void (if modifying in place)
  */
-export type ClassDecorator = <
-  Class extends abstract new (...args: any) => any,
->(
+export type ClassDecorator = <Class extends abstract new (...args: any) => any>(
   target: Class,
   context: ClassDecoratorContext<Class>,
 ) => Class | void;

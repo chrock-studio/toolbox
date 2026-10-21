@@ -1,0 +1,13 @@
+{
+  "name": "@chrock-studio/overload",
+  "version": "0.2.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "type-fest": "^5.5.0"
+  }
+}

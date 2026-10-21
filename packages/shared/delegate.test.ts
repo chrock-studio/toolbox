@@ -1,8 +1,8 @@
-import { assertEquals } from "@std/assert";
+import { describe, expect, test } from "bun:test";
 import { delegate } from "./delegate.ts";
 
-Deno.test("delegate", async (t) => {
-  await t.step("should get value when called without arguments", () => {
+describe("delegate", () => {
+  test("should get value when called without arguments", () => {
     let value = 42;
     const getter = () => value;
     const setter = (v: number) => {
@@ -11,10 +11,10 @@ Deno.test("delegate", async (t) => {
 
     const d = delegate(getter, setter);
 
-    assertEquals(d(), 42);
+    expect(d()).toBe(42);
   });
 
-  await t.step("should set value when called with argument", () => {
+  test("should set value when called with argument", () => {
     let value = 42;
     const getter = () => value;
     const setter = (v: number) => {
@@ -24,10 +24,10 @@ Deno.test("delegate", async (t) => {
     const d = delegate(getter, setter);
 
     d(100);
-    assertEquals(d(), 100);
+    expect(d()).toBe(100);
   });
 
-  await t.step("should work with string values", () => {
+  test("should work with string values", () => {
     let value = "hello";
     const d = delegate(
       () => value,
@@ -36,13 +36,13 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(d(), "hello");
+    expect(d()).toBe("hello");
 
     d("world");
-    assertEquals(d(), "world");
+    expect(d()).toBe("world");
   });
 
-  await t.step("should work with object values", () => {
+  test("should work with object values", () => {
     let value = { name: "test", count: 1 };
     const d = delegate(
       () => value,
@@ -51,13 +51,13 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(d(), { name: "test", count: 1 });
+    expect(d()).toStrictEqual({ name: "test", count: 1 });
 
     d({ name: "updated", count: 2 });
-    assertEquals(d(), { name: "updated", count: 2 });
+    expect(d()).toStrictEqual({ name: "updated", count: 2 });
   });
 
-  await t.step("should work with null and undefined values", () => {
+  test("should work with null and undefined values", () => {
     let value: string | null = null;
     const d = delegate(
       () => value,
@@ -66,16 +66,16 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(d(), null);
+    expect(d()).toBe(null);
 
     d("not null");
-    assertEquals(d(), "not null");
+    expect(d()).toBe("not null");
 
     d(null);
-    assertEquals(d(), null);
+    expect(d()).toBe(null);
   });
 
-  await t.step("should work with boolean values", () => {
+  test("should work with boolean values", () => {
     let value = false;
     const d = delegate(
       () => value,
@@ -84,13 +84,13 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(d(), false);
+    expect(d()).toBe(false);
 
     d(true);
-    assertEquals(d(), true);
+    expect(d()).toBe(true);
   });
 
-  await t.step("should work with array values", () => {
+  test("should work with array values", () => {
     let value: number[] = [1, 2, 3];
     const d = delegate(
       () => value,
@@ -99,13 +99,13 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(d(), [1, 2, 3]);
+    expect(d()).toStrictEqual([1, 2, 3]);
 
     d([4, 5, 6]);
-    assertEquals(d(), [4, 5, 6]);
+    expect(d()).toStrictEqual([4, 5, 6]);
   });
 
-  await t.step("should return undefined when setting value", () => {
+  test("should return undefined when setting value", () => {
     let value = 0;
     const d = delegate(
       () => value,
@@ -115,11 +115,11 @@ Deno.test("delegate", async (t) => {
     );
 
     const result = d(10);
-    assertEquals(result, undefined);
-    assertEquals(d(), 10);
+    expect(result).toBe(undefined);
+    expect(d()).toBe(10);
   });
 
-  await t.step("should work with multiple delegates independently", () => {
+  test("should work with multiple delegates independently", () => {
     let valueA = "a";
     let valueB = "b";
 
@@ -136,13 +136,13 @@ Deno.test("delegate", async (t) => {
       },
     );
 
-    assertEquals(dA(), "a");
-    assertEquals(dB(), "b");
+    expect(dA()).toBe("a");
+    expect(dB()).toBe("b");
 
     dA("updated A");
     dB("updated B");
 
-    assertEquals(dA(), "updated A");
-    assertEquals(dB(), "updated B");
+    expect(dA()).toBe("updated A");
+    expect(dB()).toBe("updated B");
   });
 });

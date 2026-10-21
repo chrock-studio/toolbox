@@ -95,12 +95,13 @@
   await users.deleteMany(["UkjOd93_", "JIczAd_3"]);
   // DELETE FROM kv WHERE __key->'$' == ?->'$'; ('["users", "UkjOid93_"]', '["users", "JIczAd_3"]')
 
-  const postForUser = await posts.find({ "owner": kv.eq(user) });
+  const postForUser = await posts.find({ owner: kv.eq(user) });
   // SELECT __value->'$' AS value FROM kv WHERE TRUE AND __value->'$.owner_id' == ?; ("UkjOid93_")
   console.log(postFromUser.owner); // -> { id: "UkjOid93_", name: ..., mail: ... }
 
   // 也可以直接执行SQL语句，来组装特定的查询逻辑
-  const [{ name }] = await users.sql`SELECT ${users.extract("name")} AS name FROM ${kv.table} WHERE __value->'$.mail' LIKE ${"%@example.com"}`;
+  const [{ name }] =
+    await users.sql`SELECT ${users.extract("name")} AS name FROM ${kv.table} WHERE __value->'$.mail' LIKE ${"%@example.com"}`;
   // SELECT __value->'$.name' AS name FROM kv WHERE __value->'$.mail' LIKE ?`; ("%@example.com")
   // column 和 table 都是特殊的值所以不会被编译为插槽而是直接拼接，后续的则是普通插值，因此编译为插槽，并且通过 `run(sql, ['%@example.com'])` 进行调用
   ```

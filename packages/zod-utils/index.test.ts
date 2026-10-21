@@ -1,9 +1,9 @@
-import { assertEquals } from "@std/assert";
+import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { type Overwrite, withPrototype } from "./apply/mod.ts";
+import { type Overwrite, withPrototype } from "./apply/index.ts";
 
-Deno.test("withPrototype", async (t) => {
-  await t.step("should add prototype methods to Zod object schema output", () => {
+describe("withPrototype", () => {
+  test("should add prototype methods to Zod object schema output", () => {
     const User = withPrototype(
       z.object({
         name: z.string(),
@@ -21,10 +21,10 @@ Deno.test("withPrototype", async (t) => {
       age: 18,
     });
 
-    assertEquals(user.info(), '"John Doe" (18)');
+    expect(user.info()).toBe('"John Doe" (18)');
   });
 
-  await t.step("should work with .apply() method", () => {
+  test("should work with .apply() method", () => {
     const User = z
       .object({
         name: z.string(),
@@ -43,10 +43,10 @@ Deno.test("withPrototype", async (t) => {
       age: 25,
     });
 
-    assertEquals(user.info(), '"Jane Smith" (25)');
+    expect(user.info()).toBe('"Jane Smith" (25)');
   });
 
-  await t.step("should work with getter and nested objects", () => {
+  test("should work with getter and nested objects", () => {
     const Address = withPrototype(
       z.object({
         street: z.string(),
@@ -59,14 +59,18 @@ Deno.test("withPrototype", async (t) => {
       },
     );
 
-    const User = z.object({
-      name: z.string(),
-      address: Address,
-    }).apply(withPrototype({
-      get info() {
-        return `"${this.name}" at ${this.address.fullAddress()}`;
-      },
-    }));
+    const User = z
+      .object({
+        name: z.string(),
+        address: Address,
+      })
+      .apply(
+        withPrototype({
+          get info() {
+            return `"${this.name}" at ${this.address.fullAddress()}`;
+          },
+        }),
+      );
 
     const user = User.decode({
       name: "John Doe",
@@ -76,21 +80,18 @@ Deno.test("withPrototype", async (t) => {
       },
     });
 
-    assertEquals(user.address.fullAddress(), "123 Main St, New York");
-    assertEquals(user.info, '"John Doe" at 123 Main St, New York');
+    expect(user.address.fullAddress()).toBe("123 Main St, New York");
+    expect(user.info).toBe('"John Doe" at 123 Main St, New York');
   });
 
-  await t.step("should work with prototype chain", () => {
+  test("should work with prototype chain", () => {
     const shape = {
       name: z.string(),
       age: z.number(),
     };
 
     interface UserOverwrite extends Overwrite {
-      return: z.ZodObject<
-        typeof shape,
-        Overwrite.Methods<this> extends infer O ? z.core.$strip & { out: O } : never
-      >;
+      return: z.ZodObject<typeof shape, Overwrite.Methods<this> extends infer O ? z.core.$strip & { out: O } : never>;
     }
     const User = z
       .object(shape)
@@ -118,7 +119,7 @@ Deno.test("withPrototype", async (t) => {
       length: 160,
     });
 
-    assertEquals(user.info(), '"John Doe" (Age: 18)');
-    assertEquals(user.fullInformation(), '"John Doe" (Age: 18) (Length: 160)');
+    expect(user.info()).toBe('"John Doe" (Age: 18)');
+    expect(user.fullInformation()).toBe('"John Doe" (Age: 18) (Length: 160)');
   });
 });

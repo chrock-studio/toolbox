@@ -1,0 +1,20 @@
+{
+  "name": "@chrock-studio/sql-kv",
+  "version": "0.2.1",
+  "description": "A simple key-value store built on top of SQL databases.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./kv": "./kv.ts",
+    "./store": "./store.ts",
+    "./collection": "./collection.ts",
+    "./filter": "./filter.ts",
+    "./sql": "./sql.ts",
+    "./types": "./types.ts"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.11",
+    "zod": "^4.3.6"
+  }
+}

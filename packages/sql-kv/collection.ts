@@ -159,7 +159,7 @@ export class Collection<T extends Record<string, unknown>> {
    * Normalize query options: coerce `orderBy` to an array of SortSpec.
    */
   private normalizeOptions(options?: QueryOptions): QueryOptions & { orderBy: SortSpec[] } {
-    const orderBy = options?.orderBy ? Array.isArray(options.orderBy) ? options.orderBy : [options.orderBy] : [];
+    const orderBy = options?.orderBy ? (Array.isArray(options.orderBy) ? options.orderBy : [options.orderBy]) : [];
 
     return {
       limit: options?.limit,
@@ -180,9 +180,10 @@ export class Collection<T extends Record<string, unknown>> {
    */
   private buildInsert(items: [key: string, value: unknown][]): { sql: string; params: SQLInputValue[] } {
     return {
-      sql: `INSERT OR REPLACE INTO ${this.tableName} (__key, __value) VALUES ${
-        Array.from({ length: items.length }, () => "(?, ?)").join(",")
-      }`,
+      sql: `INSERT OR REPLACE INTO ${this.tableName} (__key, __value) VALUES ${Array.from(
+        { length: items.length },
+        () => "(?, ?)",
+      ).join(",")}`,
       params: items.flat(1) as SQLInputValue[],
     };
   }
@@ -207,7 +208,7 @@ export class Collection<T extends Record<string, unknown>> {
    */
   async set(key: string, value: T): Promise<T[]> {
     const storeKey = this.makeKey(key);
-    const parsed = await this.config.schema.encodeAsync(value) as T;
+    const parsed = (await this.config.schema.encodeAsync(value)) as T;
     const storeValue = JSON.stringify(parsed);
 
     const { sql, params } = this.buildInsert([[storeKey, storeValue]]);
@@ -236,7 +237,7 @@ export class Collection<T extends Record<string, unknown>> {
    */
   async setMany(items: [key: string, value: T][]): Promise<T[]> {
     const entries = await Promise.all(
-      items.map(async ([key, value]) => [key, await this.config.schema.encodeAsync(value) as T] as const),
+      items.map(async ([key, value]) => [key, (await this.config.schema.encodeAsync(value)) as T] as const),
     );
     if (entries.length === 0) return [];
 
@@ -411,10 +412,7 @@ export class Collection<T extends Record<string, unknown>> {
     const storeKeys = keys.map((k) => this.makeKey(k));
     const conditions = storeKeys.map(() => `${this.keyPath} == ?`).join(" OR ");
 
-    await this.adapter.run(
-      `DELETE FROM ${this.tableName} WHERE ${conditions}`,
-      storeKeys,
-    );
+    await this.adapter.run(`DELETE FROM ${this.tableName} WHERE ${conditions}`, storeKeys);
   }
 
   // -----------------------------------------------------------------------

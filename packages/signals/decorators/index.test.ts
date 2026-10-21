@@ -1,9 +1,9 @@
 import { signalization } from "@chrock-studio/signals/decorators";
 import { effectScope } from "alien-signals";
-import { assertEquals } from "@std/assert";
+import { describe, expect, test } from "bun:test";
 
-Deno.test("signalization", async (t) => {
-  await t.step("Basic getter/setter", () => {
+describe("signalization", () => {
+  test("Basic getter/setter", () => {
     class Temp {
       count = 0;
 
@@ -20,14 +20,14 @@ Deno.test("signalization", async (t) => {
 
     const temp = new Temp();
     const stop = effectScope(() => {
-      assertEquals(temp.name, "John Doe");
-      assertEquals(temp.count, 1);
+      expect(temp.name).toBe("John Doe");
+      expect(temp.count).toBe(1);
       temp.first = "Jane";
-      assertEquals(temp.count, 1);
-      assertEquals(temp.name, "Jane Doe");
-      assertEquals(temp.count, 2);
-      temp.name, temp.name, temp.name;
-      assertEquals(temp.count, 2);
+      expect(temp.count).toBe(1);
+      expect(temp.name).toBe("Jane Doe");
+      expect(temp.count).toBe(2);
+      (temp.name, temp.name, temp.name);
+      expect(temp.count).toBe(2);
     });
     stop();
   });

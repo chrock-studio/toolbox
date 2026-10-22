@@ -131,6 +131,50 @@
  * log("item", 1, 2, 3, 4); // "item" 1 [2, 3, 4]
  * ```
  *
+ * @example Precompiled dispatch (using `check()`)
+ *
+ * ```ts
+ * import { check, Overload } from "@chrock-studio/overload";
+ *
+ * const str = check((x): x is string => typeof x === "string");
+ * const num = check((x): x is number => typeof x === "number");
+ *
+ * // Build the function normally, then upgrade it once.
+ * const greet = Overload
+ *   .withFallback(() => "Unknown")
+ *   .overload([str], (name) => `Hello, ${name}!`)
+ *   .overload([num], (age) => `Age: ${age}`);
+ *
+ * const fast = greet.aot();
+ * fast("Alice"); // "Hello, Alice!"
+ *
+ * // Or compile from the start with the mirrored builder.
+ * const sum = Overload.aot
+ *   .withFallback(() => 0)
+ *   .overload([num, num], (a, b) => a + b);
+ * ```
+ *
+ * ## Performance
+ *
+ * Dispatch walks the matcher list on every call, so hot overloaded functions
+ * can opt into ahead-of-time compilation:
+ *
+ * - `fn.aot()` compiles a finished function and returns one with identical
+ *   behaviour and types.
+ * - `Overload.aot` mirrors the builder API, compiling as the chain is built.
+ *
+ * Compiled dispatch inlines the guards of every branch, avoids allocating the
+ * arguments array, and calls the raw predicate behind `check()` instead of
+ * building a `StandardSchemaV1` result object. Measured gains for `check()`
+ * schemas are roughly 3x–10x depending on branch count; schemas from
+ * third-party libraries keep their own validation cost and gain roughly 2x from
+ * the dispatch side alone.
+ *
+ * Compilation relies on `new Function`. Runtimes that forbid code generation
+ * (for example a strict Content Security Policy or some edge runtimes) are
+ * detected automatically: a warning is printed once and the call falls back to
+ * interpreted dispatch, so `aot()` is always safe to call.
+ *
  * @module "@chrock-studio/overload"
  */
 

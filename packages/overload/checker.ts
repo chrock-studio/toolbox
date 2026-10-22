@@ -1,7 +1,8 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { registerFastCheck } from "./internal.ts";
 
 export const check = <T>(checker: (data: unknown) => data is T): StandardSchemaV1<T> => {
-  return {
+  const schema: StandardSchemaV1<T> = {
     "~standard": {
       version: 1,
       vendor: "@chrock-studio/overload",
@@ -10,4 +11,6 @@ export const check = <T>(checker: (data: unknown) => data is T): StandardSchemaV
       },
     },
   };
+  registerFastCheck(schema, checker);
+  return schema;
 };

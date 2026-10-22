@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { setInternals } from "./internal.ts";
 
 /**
  * Infers the output types from an array of {@link StandardSchemaV1} checkers.
@@ -107,6 +108,7 @@ export class Matcher<Implement extends (...args: any[]) => any = (...args: any[]
     this.checkers = checkers.map((checker) => (data: unknown) => checker["~standard"].validate(data));
     this.rest = rest ? (data: unknown) => rest["~standard"].validate(data) : undefined;
     this.implement = implement;
+    setInternals(this, { schemas: checkers, rest });
   }
 
   /**

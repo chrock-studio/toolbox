@@ -10,6 +10,6 @@
     "type-fest": "npm:type-fest@^5.5.0"
   },
   "publish": {
-    "exclude": ["**/*.test.ts", "bench/**", "package.json"]
+    "exclude": ["**/*.test.ts", "bench/**", "dist/**", "tsconfig.build.json", "package.json"]
   }
 }
